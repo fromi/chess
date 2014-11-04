@@ -1,17 +1,22 @@
 package com.github.fromi.chess;
 
+import static com.github.fromi.chess.material.Piece.Type.PAWN;
+
+import com.github.fromi.chess.material.Board;
 import com.github.fromi.chess.material.Piece;
 import com.github.fromi.chess.material.PieceMove;
 import com.github.fromi.chess.material.Square;
 import com.google.common.eventbus.EventBus;
 
 public class Player {
-    private final Color color;
+    private final Piece.Color color;
     private final EventBus eventBus;
+    private final Board board;
     private boolean isPlaying;
 
-    public Player(Color color, boolean isPlaying, EventBus eventBus) {
+    public Player(Piece.Color color, Board board, EventBus eventBus, boolean isPlaying) {
         this.color = color;
+        this.board = board;
         this.isPlaying = isPlaying;
         this.eventBus = eventBus;
     }
@@ -20,7 +25,10 @@ public class Player {
         if (!isPlaying) {
             throw new NotPlayerTurn();
         }
-        eventBus.post(new PieceMove.Event(color, Piece.PAWN, origin, destination));
+        if (board.getPieceAt(origin).getColor() != color) {
+            throw new CannotMoveOpponentPiece();
+        }
+        eventBus.post(new PieceMove.Event(color, PAWN, origin, destination));
     }
 
 }

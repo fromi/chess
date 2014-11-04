@@ -1,8 +1,8 @@
 package com.github.fromi.chess;
 
-import static com.github.fromi.chess.Color.BLACK;
-import static com.github.fromi.chess.Color.WHITE;
-import static com.github.fromi.chess.material.Piece.PAWN;
+import static com.github.fromi.chess.material.Piece.Color.BLACK;
+import static com.github.fromi.chess.material.Piece.Color.WHITE;
+import static com.github.fromi.chess.material.Piece.Type.PAWN;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentCaptor.forClass;
@@ -17,14 +17,15 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.github.fromi.chess.material.PieceMove;
 import com.github.fromi.chess.material.Square;
+import com.github.fromi.chess.material.SquareEmpty;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ChessTest {
 
-    private static final Square E2 = new Square('E', 2);
-    private static final Square E4 = new Square('E', 4);
-    private static final Square E5 = new Square('E', 5);
-    private static final Square E7 = new Square('E', 7);
+    private static final Square E2 = new Square('e', 2);
+    private static final Square E4 = new Square('e', 4);
+    private static final Square E5 = new Square('e', 5);
+    private static final Square E7 = new Square('e', 7);
 
     private Game game;
 
@@ -52,5 +53,10 @@ public class ChessTest {
     @Test(expected = NotPlayerTurn.class)
     public void black_player_does_not_start() {
         game.player(BLACK).move(E7, E5);
+    }
+
+    @Test(expected = SquareEmpty.class)
+    public void cannot_move_from_empty_square() {
+        game.player(WHITE).move(E4, E5);
     }
 }

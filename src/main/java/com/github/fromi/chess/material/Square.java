@@ -9,4 +9,12 @@ public class Square {
         this.file = file;
         this.rank = rank;
     }
+
+    public char getFile() {
+        return file;
+    }
+
+    public int getRank() {
+        return rank;
+    }
 }

@@ -1,6 +1,5 @@
 package com.github.fromi.chess.material;
 
-import com.github.fromi.chess.Color;
 import com.google.common.eventbus.Subscribe;
 
 @FunctionalInterface
@@ -9,23 +8,23 @@ public interface PieceMove {
     public void handle(Event event);
 
     public class Event {
-        private final Color color;
-        private final Piece piece;
+        private final Piece.Color color;
+        private final Piece.Type piece;
         private final Square origin;
         private final Square destination;
 
-        public Event(Color color, Piece piece, Square origin, Square destination) {
+        public Event(Piece.Color color, Piece.Type piece, Square origin, Square destination) {
             this.color = color;
             this.piece = piece;
             this.origin = origin;
             this.destination = destination;
         }
 
-        public Color getColor() {
+        public Piece.Color getColor() {
             return color;
         }
 
-        public Piece getPiece() {
+        public Piece.Type getPiece() {
             return piece;
         }
 
