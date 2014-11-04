@@ -1,13 +1,8 @@
 package com.github.fromi.chess;
 
-import static com.github.fromi.chess.material.Piece.Color.BLACK;
-import static com.github.fromi.chess.material.Piece.Color.WHITE;
-import static com.github.fromi.chess.material.Piece.Type.PAWN;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentCaptor.forClass;
-import static org.mockito.Mockito.verify;
-
+import com.github.fromi.chess.material.PieceMove;
+import com.github.fromi.chess.material.Square;
+import com.github.fromi.chess.material.SquareEmpty;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,9 +10,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.github.fromi.chess.material.PieceMove;
-import com.github.fromi.chess.material.Square;
-import com.github.fromi.chess.material.SquareEmpty;
+import static com.github.fromi.chess.material.Piece.Color.*;
+import static com.github.fromi.chess.material.Piece.Type.PAWN;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentCaptor.forClass;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ChessTest {
@@ -58,5 +56,17 @@ public class ChessTest {
     @Test(expected = SquareEmpty.class)
     public void cannot_move_from_empty_square() {
         game.player(WHITE).move(E4, E5);
+    }
+
+    @Test(expected = CannotMoveOpponentPiece.class)
+    public void cannot_move_opponent_piece() {
+        game.player(WHITE).move(E7, E5);
+    }
+
+    @Test
+    public void players_move_once_each_turn() {
+        game.player(WHITE).move(E2, E4);
+        game.player(BLACK).move(E7, E5);
+        verify(pieceMove, times(2)).handle(pieceMoveEventArgumentCaptor.capture());
     }
 }

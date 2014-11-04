@@ -19,6 +19,11 @@ public class Player {
         this.board = board;
         this.isPlaying = isPlaying;
         this.eventBus = eventBus;
+        watchGame(eventBus);
+    }
+
+    private void watchGame(EventBus eventBus) {
+        eventBus.register((NextPlayer) event -> isPlaying = !isPlaying);
     }
 
     public void move(Square origin, Square destination) {
@@ -29,6 +34,7 @@ public class Player {
             throw new CannotMoveOpponentPiece();
         }
         eventBus.post(new PieceMove.Event(color, PAWN, origin, destination));
+        eventBus.post(new NextPlayer.Event());
     }
 
 }
