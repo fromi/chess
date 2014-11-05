@@ -30,7 +30,7 @@ public class Player {
         if (!isPlaying) {
             throw new NotPlayerTurn();
         }
-        if (board.getPieceAt(origin).getColor() != color) {
+        if (!board.getPieceAt(origin).isSameColorAs(color)) {
             throw new CannotMoveOpponentPiece();
         }
         eventBus.post(new PieceMove.Event(color, PAWN, origin, destination));

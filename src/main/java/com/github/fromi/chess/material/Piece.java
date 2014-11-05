@@ -37,11 +37,15 @@ public class Piece {
         this.type = type;
     }
 
-    public Color getColor() {
-        return color;
+    public boolean isSameColorAs(Color color) {
+        return this.color.equals(color);
     }
 
-    public enum Type {KING, QUEEN, BISHOP, KNIGHT, ROOK, PAWN}
+    public enum Type {
+        KING, QUEEN, BISHOP, KNIGHT, ROOK, PAWN
+    }
 
-    public static enum Color {BLACK, WHITE}
+    public static enum Color {
+        BLACK, WHITE
+    }
 }
