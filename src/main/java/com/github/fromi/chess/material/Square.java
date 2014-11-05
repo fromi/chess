@@ -17,4 +17,27 @@ public class Square {
     public int getRank() {
         return rank;
     }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Square square = (Square) o;
+
+        return file == square.file && rank == square.rank;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) file;
+        result = 31 * result + rank;
+        return result;
+    }
 }

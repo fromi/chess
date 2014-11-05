@@ -1,4 +1,4 @@
 package com.github.fromi.chess.material;
 
-public class SquareEmpty extends IllegalMoveException {
+public class SquareEmpty extends IllegalArgumentException {
 }

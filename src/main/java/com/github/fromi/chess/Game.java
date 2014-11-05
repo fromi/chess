@@ -16,7 +16,7 @@ public class Game {
     private final Board board;
 
     public Game() {
-        board = new Board();
+        board = new Board(eventBus);
         players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, color == WHITE));
     }
 

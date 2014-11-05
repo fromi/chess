@@ -42,8 +42,8 @@ public class ChessTest {
         game.player(WHITE).move(E2, E4);
         verify(pieceMove).handle(pieceMoveEventArgumentCaptor.capture());
         PieceMove.Event event = pieceMoveEventArgumentCaptor.getValue();
-        assertThat(event.getColor(), equalTo(WHITE));
-        assertThat(event.getPiece(), equalTo(PAWN));
+        assertThat(event.getPiece().getColor(), equalTo(WHITE));
+        assertThat(event.getPiece().getType(), equalTo(PAWN));
         assertThat(event.getOrigin(), equalTo(E2));
         assertThat(event.getDestination(), equalTo(E4));
     }
