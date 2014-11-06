@@ -12,6 +12,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import static com.github.fromi.chess.material.Piece.Color.*;
 import static com.github.fromi.chess.material.Piece.Type.PAWN;
+import static com.github.fromi.chess.material.Square.SQUARES;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentCaptor.forClass;
@@ -20,10 +21,10 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class ChessTest {
 
-    private static final Square E2 = new Square('e', 2);
-    private static final Square E4 = new Square('e', 4);
-    private static final Square E5 = new Square('e', 5);
-    private static final Square E7 = new Square('e', 7);
+    private static final Square E2 = SQUARES.get('e', 2);
+    private static final Square E4 = SQUARES.get('e', 4);
+    private static final Square E5 = SQUARES.get('e', 5);
+    private static final Square E7 = SQUARES.get('e', 7);
 
     private Game game;
 

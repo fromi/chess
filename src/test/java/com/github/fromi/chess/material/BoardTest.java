@@ -1,5 +1,6 @@
 package com.github.fromi.chess.material;
 
+import static com.github.fromi.chess.material.Square.SQUARES;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,10 +17,10 @@ import com.google.common.eventbus.EventBus;
 @RunWith(MockitoJUnitRunner.class)
 public class BoardTest {
 
-    private static final Square E2 = new Square('e', 2);
-    private static final Square E4 = new Square('e', 4);
-    private static final Square E5 = new Square('e', 5);
-    private static final Square F3 = new Square('f', 3);
+    private static final Square E2 = SQUARES.get('e', 2);
+    private static final Square E4 = SQUARES.get('e', 4);
+    private static final Square E5 = SQUARES.get('e', 5);
+    private static final Square F3 = SQUARES.get('f', 3);
     private Board board;
 
     @Mock
@@ -52,7 +53,7 @@ public class BoardTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void destination_must_differ_from_origin() {
-        board.movePiece(new Square('e', 2), new Square('e', 2));
+        board.movePiece(E2, E2);
     }
 
     @Test(expected = IllegalMoveException.class)

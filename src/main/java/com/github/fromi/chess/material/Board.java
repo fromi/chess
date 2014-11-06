@@ -20,8 +20,8 @@ import com.google.common.eventbus.EventBus;
 
 public class Board {
 
-    private static final List<Integer> RANKS = range(1, 9).boxed().collect(toList());
-    private static final List<Character> FILES = asList('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
+    public static final List<Integer> RANKS = range(1, 9).boxed().collect(toList());
+    public static final List<Character> FILES = asList('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
     private static final Character KINGS_STARTING_FILE = 'e';
     private static final Character QUEENS_STARTING_FILE = 'd';
     private static final List<Character> BISHOPS_STARTING_FILES = asList('c', 'f');

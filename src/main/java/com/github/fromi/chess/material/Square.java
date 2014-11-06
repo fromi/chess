@@ -1,11 +1,21 @@
 package com.github.fromi.chess.material;
 
+import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Table;
+
 public class Square {
+
+    public static final Table<Character, Integer, Square> SQUARES;
+    static {
+        ImmutableTable.Builder<Character, Integer, Square> squaresBuilder = new ImmutableTable.Builder<>();
+        Board.FILES.forEach(file -> Board.RANKS.forEach(rank -> squaresBuilder.put(file, rank, new Square(file, rank))));
+        SQUARES = squaresBuilder.build();
+    }
 
     private final char file;
     private final int rank;
 
-    public Square(char file, int rank) {
+    private Square(char file, int rank) {
         this.file = file;
         this.rank = rank;
     }
