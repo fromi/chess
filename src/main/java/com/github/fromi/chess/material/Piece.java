@@ -53,41 +53,32 @@ public class Piece {
 
     public boolean allowMove(Square origin, Square destination) {
         checkArgument(!origin.equals(destination));
-        switch (type) {
-            case KING:
-                return true;
-            case QUEEN:
-                return true;
-            case BISHOP:
-                return true;
-            case KNIGHT:
-                return true;
-            case ROOK:
-                return true;
-            default:
-                return pawnMoveAllowed(origin, destination);
+        if (type == PAWN) {
+            return color.pawnMoveAllowed(origin, destination);
+        } else {
+            return type.moveAllowed(origin, destination);
         }
     }
 
-    private boolean pawnMoveAllowed(Square origin, Square destination) {
-        return destination.getFile() == origin.getFile() && movesForward(origin, destination) && pawnDistanceAllowed(origin, destination);
-    }
-
-    private boolean pawnDistanceAllowed(Square origin, Square destination) {
-        int distance = Math.abs(destination.getRank() - origin.getRank());
-        return distance == 1 || distance == PAWN_SPECIAL_FIRST_MOVE_DISTANCE && !pawnAlreadyMoved(origin);
-    }
-
-    private boolean pawnAlreadyMoved(Square currentSquare) {
-        return color.getPawnsStartingRank() != currentSquare.getRank();
-    }
-
-    private boolean movesForward(Square origin, Square destination) {
-        return color == WHITE ^ destination.getRank() < origin.getRank();
-    }
-
     public enum Type {
-        KING, QUEEN, BISHOP, KNIGHT, ROOK, PAWN
+        KING, QUEEN, BISHOP, KNIGHT, ROOK, PAWN;
+
+        protected boolean moveAllowed(Square origin, Square destination) {
+            switch (this) {
+                case KING:
+                    return origin.fileDistanceTo(destination) <= 1 && origin.rankDistanceTo(destination) <= 1;
+                case QUEEN:
+                    return origin.hasStraitLineTo(destination) || origin.hasStraitDiagonalTo(destination);
+                case BISHOP:
+                    return origin.hasStraitDiagonalTo(destination);
+                case KNIGHT:
+                    return origin.fileDistanceTo(destination) + origin.rankDistanceTo(destination) == 3 && !origin.hasStraitLineTo(destination);
+                case ROOK:
+                    return origin.hasStraitLineTo(destination);
+                default:
+                    throw new UnsupportedOperationException("Pawns allowed moves depends on the color");
+            }
+        }
     }
 
     public static enum Color {
@@ -107,6 +98,23 @@ public class Piece {
 
         public int getPawnsStartingRank() {
             return pawnsStartingRank;
+        }
+
+        private boolean pawnMoveAllowed(Square origin, Square destination) {
+            return destination.getFile() == origin.getFile() && movesForward(origin, destination) && pawnDistanceAllowed(origin, destination);
+        }
+
+        private boolean movesForward(Square origin, Square destination) {
+            return this == WHITE ^ destination.getRank() < origin.getRank();
+        }
+
+        private boolean pawnDistanceAllowed(Square origin, Square destination) {
+            int distance = Math.abs(destination.getRank() - origin.getRank());
+            return distance == 1 || distance == PAWN_SPECIAL_FIRST_MOVE_DISTANCE && !pawnAlreadyMoved(origin);
+        }
+
+        private boolean pawnAlreadyMoved(Square currentSquare) {
+            return pawnsStartingRank != currentSquare.getRank();
         }
     }
 }

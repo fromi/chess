@@ -1,31 +1,37 @@
 package com.github.fromi.chess.material;
 
+import static com.github.fromi.chess.material.Board.FILES;
+import static java.util.stream.IntStream.range;
+
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
 
 public class Square {
 
     public static final Table<Character, Integer, Square> SQUARES;
+
     static {
         ImmutableTable.Builder<Character, Integer, Square> squaresBuilder = new ImmutableTable.Builder<>();
-        Board.FILES.forEach(file -> Board.RANKS.forEach(rank -> squaresBuilder.put(file, rank, new Square(file, rank))));
+        range(0, Board.SIZE).forEach(
+                fileNumber -> range(0, Board.SIZE).forEach(
+                        rankNumber -> squaresBuilder.put(FILES.get(fileNumber), rankNumber + 1, new Square(fileNumber, rankNumber))));
         SQUARES = squaresBuilder.build();
     }
 
-    private final char file;
-    private final int rank;
+    private final int fileNumber;
+    private final int rankNumber;
 
-    private Square(char file, int rank) {
-        this.file = file;
-        this.rank = rank;
+    private Square(int fileNumber, int rankNumber) {
+        this.fileNumber = fileNumber;
+        this.rankNumber = rankNumber;
     }
 
     public char getFile() {
-        return file;
+        return FILES.get(fileNumber);
     }
 
     public int getRank() {
-        return rank;
+        return rankNumber + 1;
     }
 
 
@@ -40,14 +46,30 @@ public class Square {
 
         Square square = (Square) o;
 
-        return file == square.file && rank == square.rank;
+        return fileNumber == square.fileNumber && rankNumber == square.rankNumber;
 
     }
 
     @Override
     public int hashCode() {
-        int result = (int) file;
-        result = 31 * result + rank;
+        int result = fileNumber;
+        result = 31 * result + rankNumber;
         return result;
+    }
+
+    public boolean hasStraitLineTo(Square destination) {
+        return fileNumber == destination.fileNumber || rankNumber == destination.rankNumber;
+    }
+
+    public boolean hasStraitDiagonalTo(Square destination) {
+        return fileDistanceTo(destination) == rankDistanceTo(destination);
+    }
+
+    public int fileDistanceTo(Square destination) {
+        return Math.abs(fileNumber - destination.fileNumber);
+    }
+
+    public int rankDistanceTo(Square destination) {
+        return Math.abs(rankNumber - destination.rankNumber);
     }
 }

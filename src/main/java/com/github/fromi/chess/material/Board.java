@@ -20,13 +20,14 @@ import com.google.common.eventbus.EventBus;
 
 public class Board {
 
-    public static final List<Integer> RANKS = range(1, 9).boxed().collect(toList());
+    private static final List<Integer> RANKS = range(1, 9).boxed().collect(toList());
     public static final List<Character> FILES = asList('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
     private static final Character KINGS_STARTING_FILE = 'e';
     private static final Character QUEENS_STARTING_FILE = 'd';
     private static final List<Character> BISHOPS_STARTING_FILES = asList('c', 'f');
     private static final List<Character> KNIGHTS_STARTING_FILES = asList('b', 'g');
     private static final List<Character> ROOKS_STARTING_FILES = asList('a', 'h');
+    public static final int SIZE = 8;
     private final ArrayTable<Integer, Character, Piece> table = ArrayTable.create(RANKS, FILES);
     private final EventBus eventBus;
 
