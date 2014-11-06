@@ -34,29 +34,6 @@ public class Square {
         return rankNumber + 1;
     }
 
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        Square square = (Square) o;
-
-        return fileNumber == square.fileNumber && rankNumber == square.rankNumber;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = fileNumber;
-        result = 31 * result + rankNumber;
-        return result;
-    }
-
     public boolean hasStraitLineTo(Square destination) {
         return fileNumber == destination.fileNumber || rankNumber == destination.rankNumber;
     }

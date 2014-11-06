@@ -32,10 +32,15 @@ public class ChessTest {
     PieceMove pieceMove;
     private final ArgumentCaptor<PieceMove.Event> pieceMoveEventArgumentCaptor = forClass(PieceMove.Event.class);
 
+    @Mock
+    NextPlayer nextPlayer;
+    private final ArgumentCaptor<NextPlayer.Event> nextPlayerEventArgumentCaptor = forClass(NextPlayer.Event.class);
+
     @Before
     public void setUp() {
         game = new Game();
         game.register(pieceMove);
+        game.register(nextPlayer);
     }
 
     @Test
@@ -47,6 +52,7 @@ public class ChessTest {
         assertThat(event.getPiece().getType(), equalTo(PAWN));
         assertThat(event.getOrigin(), equalTo(E2));
         assertThat(event.getDestination(), equalTo(E4));
+        verify(nextPlayer).handle(nextPlayerEventArgumentCaptor.capture());
     }
 
     @Test(expected = NotPlayerTurn.class)

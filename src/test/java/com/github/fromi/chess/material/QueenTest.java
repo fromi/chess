@@ -1,6 +1,5 @@
 package com.github.fromi.chess.material;
 
-import static com.github.fromi.chess.material.Piece.Color.WHITE;
 import static com.github.fromi.chess.material.Piece.Type.QUEEN;
 import static com.github.fromi.chess.material.Square.SQUARES;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -18,8 +17,6 @@ public class QueenTest {
     // Valid moves
     private static final Boolean X = true;
 
-    private final Piece queen = Piece.PIECES.get(WHITE, QUEEN);
-
     @Test
     public void queen_moves_from_D4() {
         Boolean[] rank8 = {O, O, O, X, O, O, O, X};
@@ -35,7 +32,7 @@ public class QueenTest {
             for (int rankNumber = 0 ; rankNumber < Board.SIZE ; rankNumber++) {
                 Square destination = SQUARES.get(Board.FILES.get(fileNumber), rankNumber + 1);
                 if (destination.equals(D4)) continue;
-                assertThat(queen.allowMove(D4, destination), equalTo(board[rankNumber][fileNumber]));
+                assertThat(QUEEN.moveAllowed(D4, destination), equalTo(board[rankNumber][fileNumber]));
             }
         }
     }
@@ -55,7 +52,7 @@ public class QueenTest {
             for (int rankNumber = 0 ; rankNumber < Board.SIZE ; rankNumber++) {
                 Square destination = SQUARES.get(Board.FILES.get(fileNumber), rankNumber + 1);
                 if (destination.equals(B8)) continue;
-                assertThat(queen.allowMove(B8, destination), equalTo(board[rankNumber][fileNumber]));
+                assertThat(QUEEN.moveAllowed(B8, destination), equalTo(board[rankNumber][fileNumber]));
             }
         }
     }

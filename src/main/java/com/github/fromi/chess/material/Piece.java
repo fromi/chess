@@ -34,6 +34,7 @@ public class Piece {
     private static final int WHITE_PAWNS_STARTING_RANK = 2;
     private static final int BLACK_PAWNS_STARTING_RANK = 7;
     private static final int PAWN_SPECIAL_FIRST_MOVE_DISTANCE = 2;
+    private static final int KNIGHT_MOVE_DISTANCE = 3;
 
     private final Color color;
     private final Type type;
@@ -51,7 +52,7 @@ public class Piece {
         return type;
     }
 
-    public boolean allowMove(Square origin, Square destination) {
+    public boolean moveAllowed(Square origin, Square destination) {
         checkArgument(!origin.equals(destination));
         if (type == PAWN) {
             return color.pawnMoveAllowed(origin, destination);
@@ -60,23 +61,36 @@ public class Piece {
         }
     }
 
-    public enum Type {
-        KING, QUEEN, BISHOP, KNIGHT, ROOK, PAWN;
-
-        protected boolean moveAllowed(Square origin, Square destination) {
-            switch (this) {
-                case KING:
-                    return origin.fileDistanceTo(destination) <= 1 && origin.rankDistanceTo(destination) <= 1;
-                case QUEEN:
-                    return origin.hasStraitLineTo(destination) || origin.hasStraitDiagonalTo(destination);
-                case BISHOP:
-                    return origin.hasStraitDiagonalTo(destination);
-                case KNIGHT:
-                    return origin.fileDistanceTo(destination) + origin.rankDistanceTo(destination) == 3 && !origin.hasStraitLineTo(destination);
-                case ROOK:
-                    return origin.hasStraitLineTo(destination);
-                default:
-                    throw new UnsupportedOperationException("Pawns allowed moves depends on the color");
+    public enum Type implements Movable {
+        KING {
+            @Override
+            public boolean moveAllowed(Square origin, Square destination) {
+                return origin.fileDistanceTo(destination) <= 1 && origin.rankDistanceTo(destination) <= 1;
+            }
+        }, QUEEN {
+            @Override
+            public boolean moveAllowed(Square origin, Square destination) {
+                return origin.hasStraitLineTo(destination) || origin.hasStraitDiagonalTo(destination);
+            }
+        }, BISHOP {
+            @Override
+            public boolean moveAllowed(Square origin, Square destination) {
+                return origin.hasStraitDiagonalTo(destination);
+            }
+        }, KNIGHT {
+            @Override
+            public boolean moveAllowed(Square origin, Square destination) {
+                return origin.fileDistanceTo(destination) + origin.rankDistanceTo(destination) == KNIGHT_MOVE_DISTANCE && !origin.hasStraitLineTo(destination);
+            }
+        }, ROOK {
+            @Override
+            public boolean moveAllowed(Square origin, Square destination) {
+                return origin.hasStraitLineTo(destination);
+            }
+        }, PAWN {
+            @Override
+            public boolean moveAllowed(Square origin, Square destination) {
+                throw new UnsupportedOperationException("Pawns allowed moves depends on the color");
             }
         }
     }
@@ -116,5 +130,9 @@ public class Piece {
         private boolean pawnAlreadyMoved(Square currentSquare) {
             return pawnsStartingRank != currentSquare.getRank();
         }
+    }
+
+    private static interface Movable {
+        boolean moveAllowed(Square origin, Square destination);
     }
 }

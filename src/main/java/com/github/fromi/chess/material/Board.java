@@ -56,7 +56,7 @@ public class Board {
 
     public void movePiece(Square origin, Square destination) {
         Piece piece = getPieceAt(origin);
-        if (!piece.allowMove(origin, destination)) {
+        if (!piece.moveAllowed(origin, destination)) {
             throw new IllegalMoveException();
         }
         table.erase(origin.getRank(), origin.getFile());
