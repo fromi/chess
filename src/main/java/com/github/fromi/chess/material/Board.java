@@ -56,8 +56,12 @@ public class Board {
 
     public void movePiece(Square origin, Square destination) {
         Piece piece = getPieceAt(origin);
+        Piece target = table.get(destination.getRank(), destination.getFile());
+        if (target != null && target.getColor() == piece.getColor()) {
+            throw new CannotLandOnFriend();
+        }
         if (!piece.moveAllowed(origin, destination)) {
-            throw new IllegalMoveException();
+            throw new PieceCannotMoveThisWay();
         }
         table.erase(origin.getRank(), origin.getFile());
         table.put(destination.getRank(), destination.getFile(), piece);

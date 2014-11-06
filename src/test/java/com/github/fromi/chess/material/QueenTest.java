@@ -2,6 +2,8 @@ package com.github.fromi.chess.material;
 
 import static com.github.fromi.chess.material.Piece.Type.QUEEN;
 import static com.github.fromi.chess.material.Square.SQUARES;
+import static com.github.fromi.chess.material.Squares.B8;
+import static com.github.fromi.chess.material.Squares.D4;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -9,8 +11,6 @@ import org.junit.Test;
 
 public class QueenTest {
     // Queen position
-    private static final Square D4 = SQUARES.get('d', 4);
-    private static final Square B8 = SQUARES.get('b', 8);
     private static final Boolean N = false;
     // Invalid moves
     private static final Boolean O = false;
