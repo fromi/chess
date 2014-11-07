@@ -1,6 +1,12 @@
 package com.github.fromi.chess.material;
 
-import static com.github.fromi.chess.material.Squares.*;
+import static com.github.fromi.chess.material.Board.FILES;
+import static com.github.fromi.chess.material.Piece.Color.BLACK;
+import static com.github.fromi.chess.material.Piece.Type.PAWN;
+import static com.github.fromi.chess.material.util.Pieces.*;
+import static com.github.fromi.chess.material.util.Squares.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -19,26 +25,52 @@ public class BoardTest {
 
     private Board board;
 
+    private final EventBus eventBus = new EventBus();
+
     @Mock
-    private EventBus eventBus;
+    PieceMove pieceMove;
     private final ArgumentCaptor<PieceMove.Event> pieceMoveEventArgumentCaptor = forClass(PieceMove.Event.class);
+
+    @Mock
+    PieceCaptured pieceCaptured;
+    private final ArgumentCaptor<PieceCaptured.Event> pieceCapturedEventArgumentCaptor = forClass(PieceCaptured.Event.class);
 
     @Before
     public void setUp() {
         board = new Board(eventBus);
+        eventBus.register(pieceMove);
+        eventBus.register(pieceCaptured);
+    }
+
+    @Test
+    public void verify_setup() {
+        Piece[] rank8 = {r, n, b, q, k, b, n, r};
+        Piece[] rank7 = {p, p, p, p, p, p, p, p};
+        Piece[] rank6 = {O, O, O, O, O, O, O, O};
+        Piece[] rank5 = {O, O, O, O, O, O, O, O};
+        Piece[] rank4 = {O, O, O, O, O, O, O, O};
+        Piece[] rank3 = {O, O, O, O, O, O, O, O};
+        Piece[] rank2 = {P, P, P, P, P, P, P, P};
+        Piece[] rank1 = {R, N, B, Q, K, B, N, R};
+        Piece[][] expectedBoard = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        for (int rankNumber = 0; rankNumber < 8 ; rankNumber++) {
+            for (int fileNumber = 0; fileNumber < 8 ; fileNumber++) {
+                assertThat(board.memento().get(FILES.get(fileNumber), rankNumber + 1), equalTo(expectedBoard[rankNumber][fileNumber]));
+            }
+        }
     }
 
     @Test
     public void move_piece() {
         board.movePiece(E2, E4);
-        verify(eventBus).post(pieceMoveEventArgumentCaptor.capture());
+        verify(pieceMove).handle(pieceMoveEventArgumentCaptor.capture());
     }
 
     @Test
     public void move_piece_twice() {
         board.movePiece(E2, E4);
         board.movePiece(E4, E5);
-        verify(eventBus, times(2)).post(pieceMoveEventArgumentCaptor.capture());
+        verify(pieceMove, times(2)).handle(pieceMoveEventArgumentCaptor.capture());
     }
 
     @Test(expected = SquareEmpty.class)
@@ -70,5 +102,16 @@ public class BoardTest {
     @Test
     public void knight_can_jump() {
         board.movePiece(B1, C3);
+    }
+
+    @Test
+    public void capture() {
+        board.movePiece(E2, E4);
+        board.movePiece(F7, F5);
+        board.movePiece(E4, F5);
+        verify(pieceCaptured).handle(pieceCapturedEventArgumentCaptor.capture());
+        PieceCaptured.Event event = pieceCapturedEventArgumentCaptor.getValue();
+        assertThat(event.getPiece(), equalTo(Piece.PIECES.get(BLACK, PAWN)));
+        assertThat(event.getPosition(), equalTo(F5));
     }
 }

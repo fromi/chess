@@ -1,6 +1,8 @@
-package com.github.fromi.chess.material;
+package com.github.fromi.chess.material.util;
 
 import static com.github.fromi.chess.material.Square.SQUARES;
+
+import com.github.fromi.chess.material.Square;
 
 @SuppressWarnings("UnusedDeclaration")
 public class Squares {

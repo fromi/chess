@@ -1,7 +1,7 @@
 package com.github.fromi.chess.material;
 
 import static com.github.fromi.chess.material.Piece.Type.ROOK;
-import static com.github.fromi.chess.material.Squares.*;
+import static com.github.fromi.chess.material.util.Squares.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 

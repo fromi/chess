@@ -1,6 +1,6 @@
 package com.github.fromi.chess.material;
 
-import static com.github.fromi.chess.material.Squares.*;
+import static com.github.fromi.chess.material.util.Squares.*;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.Matchers.containsInAnyOrder;

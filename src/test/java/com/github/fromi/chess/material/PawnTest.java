@@ -4,7 +4,7 @@ import static com.github.fromi.chess.material.Piece.Color.BLACK;
 import static com.github.fromi.chess.material.Piece.Color.WHITE;
 import static com.github.fromi.chess.material.Piece.PIECES;
 import static com.github.fromi.chess.material.Piece.Type.PAWN;
-import static com.github.fromi.chess.material.Squares.*;
+import static com.github.fromi.chess.material.util.Squares.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 

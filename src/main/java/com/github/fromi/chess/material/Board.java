@@ -56,18 +56,36 @@ public class Board {
 
     public void movePiece(Square origin, Square destination) {
         Piece piece = getPieceAt(origin);
-        Piece target = table.get(destination.getRank(), destination.getFile());
-        if (target != null && target.getColor() == piece.getColor()) {
-            throw new CannotLandOnFriend();
-        }
-        if (!piece.moveAllowed(origin, destination)) {
-            throw new PieceCannotMoveThisWay();
-        }
         if (piece.squaresGoingThrough(origin, destination).anyMatch(square -> table.get(square.getRank(), square.getFile()) != null)) {
             throw new CannotGoThroughAnotherPiece();
+        }
+        Piece target = table.get(destination.getRank(), destination.getFile());
+        if (target != null) {
+            if (target.getColor() == piece.getColor()) {
+                throw new CannotLandOnFriend();
+            } else {
+                if (!piece.attackAllowed(origin, destination)) {
+                    throw new CannotAttackThisWay();
+                }
+            }
+        } else {
+            if (!piece.moveAllowed(origin, destination)) {
+                throw new PieceCannotMoveThisWay();
+            }
         }
         table.erase(origin.getRank(), origin.getFile());
         table.put(destination.getRank(), destination.getFile(), piece);
         eventBus.post(new PieceMove.Event(piece, origin, destination));
+        if (target != null) {
+            eventBus.post(new PieceCaptured.Event(target, destination));
+        }
+    }
+
+    public Memento memento() {
+        return (file, rank) -> table.get(rank, file);
+    }
+
+    public static interface Memento {
+        Piece get(char file, int rank);
     }
 }

@@ -71,6 +71,14 @@ public class Piece {
         }
     }
 
+    public boolean attackAllowed(Square origin, Square destination) {
+        if (type == PAWN) {
+            return color.pawnAttackAllowed(origin, destination);
+        } else {
+            return type.moveAllowed(origin, destination);
+        }
+    }
+
     public enum Type implements Movable {
         KING {
             @Override
@@ -140,9 +148,18 @@ public class Piece {
         private boolean pawnAlreadyMoved(Square currentSquare) {
             return pawnsStartingRank != currentSquare.getRank();
         }
+
+        private boolean pawnAttackAllowed(Square origin, Square destination) {
+            return movesForward(origin, destination) && origin.fileDistanceTo(destination) == 1 && origin.rankDistanceTo(destination) == 1;
+        }
     }
 
     private static interface Movable {
         boolean moveAllowed(Square origin, Square destination);
+    }
+
+    @Override
+    public String toString() {
+        return color + " " + type;
     }
 }
