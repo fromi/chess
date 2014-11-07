@@ -1,5 +1,7 @@
 package com.github.fromi.chess;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.github.fromi.chess.material.Board;
 import com.github.fromi.chess.material.Piece;
 import com.github.fromi.chess.material.Square;
@@ -24,6 +26,7 @@ public class Player {
     }
 
     public void move(Square origin, Square destination) {
+        checkArgument(!origin.equals(destination));
         if (!isPlaying) {
             throw new NotPlayerTurn();
         }

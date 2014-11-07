@@ -60,25 +60,36 @@ public class Board {
             throw new CannotGoThroughAnotherPiece();
         }
         Piece target = table.get(destination.getRank(), destination.getFile());
-        if (target != null) {
-            if (target.getColor() == piece.getColor()) {
-                throw new CannotLandOnFriend();
-            } else {
-                if (!piece.attackAllowed(origin, destination)) {
-                    throw new CannotAttackThisWay();
-                }
-            }
+        if (target == null) {
+            moveToEmptySquare(origin, destination, piece);
         } else {
-            if (!piece.moveAllowed(origin, destination)) {
-                throw new PieceCannotMoveThisWay();
+            attack(piece, origin, target, destination);
+        }
+    }
+
+    private void moveToEmptySquare(Square origin, Square destination, Piece piece) {
+        if (!piece.moveAllowed(origin, destination)) {
+            throw new PieceCannotMoveThisWay();
+        }
+        movePieceInTable(origin, destination, piece);
+    }
+
+    private void attack(Piece piece, Square origin, Piece target, Square destination) {
+        if (target.getColor() == piece.getColor()) {
+            throw new CannotLandOnFriend();
+        } else {
+            if (!piece.attackAllowed(origin, destination)) {
+                throw new CannotAttackThisWay();
             }
         }
+        movePieceInTable(origin, destination, piece);
+        eventBus.post(new PieceCaptured.Event(target, destination));
+    }
+
+    private void movePieceInTable(Square origin, Square destination, Piece piece) {
         table.erase(origin.getRank(), origin.getFile());
         table.put(destination.getRank(), destination.getFile(), piece);
         eventBus.post(new PieceMove.Event(piece, origin, destination));
-        if (target != null) {
-            eventBus.post(new PieceCaptured.Event(target, destination));
-        }
     }
 
     public Memento memento() {

@@ -2,13 +2,7 @@ package com.github.fromi.chess.material;
 
 import static com.github.fromi.chess.material.Piece.Color.BLACK;
 import static com.github.fromi.chess.material.Piece.Color.WHITE;
-import static com.github.fromi.chess.material.Piece.Type.BISHOP;
-import static com.github.fromi.chess.material.Piece.Type.KING;
-import static com.github.fromi.chess.material.Piece.Type.KNIGHT;
-import static com.github.fromi.chess.material.Piece.Type.PAWN;
-import static com.github.fromi.chess.material.Piece.Type.QUEEN;
-import static com.github.fromi.chess.material.Piece.Type.ROOK;
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.github.fromi.chess.material.Piece.Type.*;
 
 import java.util.stream.Stream;
 
@@ -55,7 +49,6 @@ public class Piece {
     }
 
     public boolean moveAllowed(Square origin, Square destination) {
-        checkArgument(!origin.equals(destination));
         if (type == PAWN) {
             return color.pawnMoveAllowed(origin, destination);
         } else {
