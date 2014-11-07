@@ -63,6 +63,9 @@ public class Board {
         if (!piece.moveAllowed(origin, destination)) {
             throw new PieceCannotMoveThisWay();
         }
+        if (piece.squaresGoingThrough(origin, destination).anyMatch(square -> table.get(square.getRank(), square.getFile()) != null)) {
+            throw new CannotGoThroughAnotherPiece();
+        }
         table.erase(origin.getRank(), origin.getFile());
         table.put(destination.getRank(), destination.getFile(), piece);
         eventBus.post(new PieceMove.Event(piece, origin, destination));

@@ -10,6 +10,8 @@ import static com.github.fromi.chess.material.Piece.Type.QUEEN;
 import static com.github.fromi.chess.material.Piece.Type.ROOK;
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.stream.Stream;
+
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
 
@@ -58,6 +60,14 @@ public class Piece {
             return color.pawnMoveAllowed(origin, destination);
         } else {
             return type.moveAllowed(origin, destination);
+        }
+    }
+
+    public Stream<Square> squaresGoingThrough(Square origin, Square destination) {
+        if (type == KNIGHT) {
+            return Stream.empty();
+        } else {
+            return origin.squaresInBetween(destination);
         }
     }
 

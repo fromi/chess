@@ -61,4 +61,14 @@ public class BoardTest {
     public void pieces_cannot_land_on_friends() {
         board.movePiece(A1, A2);
     }
+
+    @Test(expected = CannotGoThroughAnotherPiece.class)
+    public void rook_cannot_jump() {
+        board.movePiece(A8, A6);
+    }
+
+    @Test
+    public void knight_can_jump() {
+        board.movePiece(B1, C3);
+    }
 }
