@@ -114,4 +114,20 @@ public class BoardTest {
         assertThat(event.getPiece(), equalTo(Piece.PIECES.get(BLACK, PAWN)));
         assertThat(event.getPosition(), equalTo(F5));
     }
+
+    @Test(expected = CannotAttackThisWay.class)
+    public void pawn_cannot_attack_in_front() {
+        board.movePiece(E2, E4);
+        board.movePiece(E7, E5);
+        board.movePiece(E4, E5);
+    }
+
+    @Test
+    public void queen_capture_and_captured() {
+        board.movePiece(E2, E4);
+        board.movePiece(H7, H5);
+        board.movePiece(D1, H5);
+        board.movePiece(H8, H5);
+        verify(pieceCaptured, times(2)).handle(pieceCapturedEventArgumentCaptor.capture());
+    }
 }

@@ -5,8 +5,8 @@ import static com.github.fromi.chess.material.Piece.Color.WHITE;
 import static com.github.fromi.chess.material.Piece.PIECES;
 import static com.github.fromi.chess.material.Piece.Type.PAWN;
 import static com.github.fromi.chess.material.util.Squares.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -48,5 +48,22 @@ public class PawnTest {
     @Test(expected = UnsupportedOperationException.class)
     public void pawn_move_capability_depends_on_their_color() {
         PAWN.moveAllowed(E6, E5);
+    }
+
+    @Test
+    public void pawn_only_attack_forward_diagonally() {
+        assertTrue(whitePawn.attackAllowed(E2, D3));
+        assertTrue(whitePawn.attackAllowed(E2, F3));
+        assertFalse(whitePawn.attackAllowed(E2, D1));
+        assertFalse(whitePawn.attackAllowed(E2, F1));
+        assertFalse(whitePawn.attackAllowed(E2, E3));
+        assertFalse(whitePawn.attackAllowed(E2, E4));
+        assertFalse(whitePawn.attackAllowed(E2, D2));
+        assertFalse(whitePawn.attackAllowed(E2, F2));
+    }
+
+    @Test
+    public void test_to_string() {
+        assertThat(whitePawn.toString(), equalTo("WHITE PAWN"));
     }
 }

@@ -1,8 +1,15 @@
 package com.github.fromi.chess;
 
-import com.github.fromi.chess.material.PieceMove;
-import com.github.fromi.chess.material.Square;
-import com.github.fromi.chess.material.SquareEmpty;
+import static com.github.fromi.chess.material.Piece.Color.BLACK;
+import static com.github.fromi.chess.material.Piece.Color.WHITE;
+import static com.github.fromi.chess.material.Piece.Type.PAWN;
+import static com.github.fromi.chess.material.util.Squares.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentCaptor.forClass;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -10,21 +17,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import static com.github.fromi.chess.material.Piece.Color.*;
-import static com.github.fromi.chess.material.Piece.Type.PAWN;
-import static com.github.fromi.chess.material.Square.SQUARES;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentCaptor.forClass;
-import static org.mockito.Mockito.*;
+import com.github.fromi.chess.material.PieceMove;
+import com.github.fromi.chess.material.SquareEmpty;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ChessTest {
-
-    private static final Square E2 = SQUARES.get('e', 2);
-    private static final Square E4 = SQUARES.get('e', 4);
-    private static final Square E5 = SQUARES.get('e', 5);
-    private static final Square E7 = SQUARES.get('e', 7);
 
     private Game game;
 
@@ -75,5 +72,10 @@ public class ChessTest {
         game.player(WHITE).move(E2, E4);
         game.player(BLACK).move(E7, E5);
         verify(pieceMove, times(2)).handle(pieceMoveEventArgumentCaptor.capture());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void cannot_move_to_same_square() {
+        game.player(WHITE).move(E1, E1);
     }
 }
