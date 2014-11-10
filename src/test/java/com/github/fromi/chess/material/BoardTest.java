@@ -131,7 +131,7 @@ public class BoardTest {
         verify(pieceCaptured, times(2)).handle(pieceCapturedEventArgumentCaptor.capture());
     }
 
-    @Test(expected = CannotPutYourOwnKingInCheck.class)
+    @Test(expected = CannotBeInCheckAfterMove.class)
     public void king_cannot_be_in_check_after_his_move() {
         Piece[] rank8 = {O, O, O, k, O, O, O, O};
         Piece[] rank7 = {O, O, O, O, O, O, O, O};
@@ -146,7 +146,7 @@ public class BoardTest {
         board.movePiece(D8, E7);
     }
 
-    @Test(expected = CannotPutYourOwnKingInCheck.class)
+    @Test(expected = CannotBeInCheckAfterMove.class)
     public void king_cannot_be_in_check_after_any_move() {
         Piece[] rank8 = {O, O, O, q, O, O, O, O};
         Piece[] rank7 = {O, O, O, O, O, O, O, O};
@@ -161,7 +161,7 @@ public class BoardTest {
         board.movePiece(D2, E4);
     }
 
-    @Test(expected = CannotPutYourOwnKingInCheck.class)
+    @Test(expected = CannotBeInCheckAfterMove.class)
     public void king_cannot_be_in_check_even_after_attack() {
         Piece[] rank8 = {O, k, O, O, O, O, O, O};
         Piece[] rank7 = {O, P, O, O, O, O, O, O};
@@ -174,5 +174,20 @@ public class BoardTest {
         Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
         Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
         board.movePiece(B8, B7);
+    }
+
+    @Test(expected = CannotBeInCheckAfterMove.class)
+    public void when_in_check_you_must_protect_the_king() {
+        Piece[] rank8 = {O, O, O, q, k, O, O, O};
+        Piece[] rank7 = {O, O, O, O, O, O, O, O};
+        Piece[] rank6 = {O, O, O, O, O, O, O, O};
+        Piece[] rank5 = {O, O, O, O, O, O, O, O};
+        Piece[] rank4 = {O, O, O, O, O, O, O, O};
+        Piece[] rank3 = {O, O, O, O, O, O, O, O};
+        Piece[] rank2 = {O, O, O, O, O, O, O, O};
+        Piece[] rank1 = {O, O, O, O, Q, k, O, O};
+        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
+        board.movePiece(D8, F6);
     }
 }

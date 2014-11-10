@@ -76,7 +76,7 @@ public class Board {
         }
         try {
             movePieceInTable(origin, destination, piece);
-        } catch (CannotPutYourOwnKingInCheck e) {
+        } catch (CannotBeInCheckAfterMove e) {
             table.erase(destination.getRank(), destination.getFile());
             table.put(origin.getRank(), origin.getFile(), piece);
             throw e;
@@ -93,7 +93,7 @@ public class Board {
         }
         try {
             movePieceInTable(origin, destination, piece);
-        } catch (CannotPutYourOwnKingInCheck e) {
+        } catch (CannotBeInCheckAfterMove e) {
             table.put(origin.getRank(), origin.getFile(), piece);
             table.put(destination.getRank(), destination.getFile(), target);
             throw e;
@@ -105,7 +105,7 @@ public class Board {
         table.erase(origin.getRank(), origin.getFile());
         table.put(destination.getRank(), destination.getFile(), piece);
         if (kingInCheck(piece.getColor())) {
-            throw new CannotPutYourOwnKingInCheck();
+            throw new CannotBeInCheckAfterMove();
         }
         eventBus.post(new PieceMove.Event(piece, origin, destination));
     }
