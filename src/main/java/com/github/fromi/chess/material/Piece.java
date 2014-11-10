@@ -145,6 +145,10 @@ public class Piece {
         private boolean pawnAttackAllowed(Square origin, Square destination) {
             return movesForward(origin, destination) && origin.fileDistanceTo(destination) == 1 && origin.rankDistanceTo(destination) == 1;
         }
+
+        public Color opponent() {
+            return this == WHITE ? BLACK : WHITE;
+        }
     }
 
     private static interface Movable {
