@@ -6,6 +6,7 @@ import static com.github.fromi.chess.material.Piece.Type.PAWN;
 import static com.github.fromi.chess.material.util.Pieces.*;
 import static com.github.fromi.chess.material.util.Squares.*;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.times;
@@ -189,5 +190,35 @@ public class BoardTest {
         Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
         Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
         board.movePiece(D8, F6);
+    }
+
+    @Test
+    public void defend_check_by_removing_attacker() {
+        Piece[] rank8 = {r, n, b, q, k, b, n, r};
+        Piece[] rank7 = {p, p, p, p, p, p, p, p};
+        Piece[] rank6 = {O, O, O, N, O, O, O, O};
+        Piece[] rank5 = {O, O, O, O, O, O, O, O};
+        Piece[] rank4 = {O, O, O, O, O, O, O, O};
+        Piece[] rank3 = {O, O, O, O, O, O, O, O};
+        Piece[] rank2 = {P, P, P, P, P, P, P, P};
+        Piece[] rank1 = {R, N, B, Q, K, B, O, R};
+        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
+        assertFalse(board.checkMate(D6));
+    }
+
+    @Test
+    public void defend_check_by_interposition() {
+        Piece[] rank8 = {r, n, b, q, k, b, n, r};
+        Piece[] rank7 = {p, p, p, p, p, O, p, p};
+        Piece[] rank6 = {O, O, O, O, O, p, O, O};
+        Piece[] rank5 = {O, O, O, O, O, O, O, Q};
+        Piece[] rank4 = {O, O, O, O, O, O, O, O};
+        Piece[] rank3 = {O, O, O, O, P, O, O, O};
+        Piece[] rank2 = {P, P, P, P, O, P, P, P};
+        Piece[] rank1 = {R, N, B, O, K, B, N, R};
+        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
+        assertFalse(board.checkMate(H5));
     }
 }

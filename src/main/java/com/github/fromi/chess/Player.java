@@ -34,6 +34,10 @@ public class Player {
             throw new CannotMoveOpponentPiece();
         }
         board.movePiece(origin, destination);
-        eventBus.post(new NextPlayer.Event());
+        if (board.checkMate(destination)) {
+            eventBus.post(new CheckMate.Event(color));
+        } else {
+            eventBus.post(new NextPlayer.Event());
+        }
     }
 }

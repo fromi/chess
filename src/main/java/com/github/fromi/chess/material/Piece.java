@@ -76,17 +76,17 @@ public class Piece {
         KING {
             @Override
             public boolean moveAllowed(Square origin, Square destination) {
-                return origin.fileDistanceTo(destination) <= 1 && origin.rankDistanceTo(destination) <= 1;
+                return origin.adjacentSquares().anyMatch(square -> square == destination);
             }
         }, QUEEN {
             @Override
             public boolean moveAllowed(Square origin, Square destination) {
-                return origin.hasStraitLineTo(destination) || origin.hasStraitDiagonalTo(destination);
+                return ROOK.moveAllowed(origin, destination) || BISHOP.moveAllowed(origin, destination);
             }
         }, BISHOP {
             @Override
             public boolean moveAllowed(Square origin, Square destination) {
-                return origin.hasStraitDiagonalTo(destination);
+                return origin != destination && origin.hasStraitDiagonalTo(destination);
             }
         }, KNIGHT {
             @Override
@@ -96,7 +96,7 @@ public class Piece {
         }, ROOK {
             @Override
             public boolean moveAllowed(Square origin, Square destination) {
-                return origin.hasStraitLineTo(destination);
+                return origin != destination && origin.hasStraitLineTo(destination);
             }
         }, PAWN {
             @Override

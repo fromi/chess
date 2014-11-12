@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.github.fromi.chess.material.PieceCaptured;
 import com.github.fromi.chess.material.PieceMove;
 import com.github.fromi.chess.material.SquareEmpty;
 
@@ -24,6 +25,8 @@ import com.github.fromi.chess.material.SquareEmpty;
 public class ChessTest {
 
     private Game game;
+    private Player whitePlayer;
+    private Player blackPlayer;
 
     @Mock
     PieceMove pieceMove;
@@ -33,16 +36,28 @@ public class ChessTest {
     NextPlayer nextPlayer;
     private final ArgumentCaptor<NextPlayer.Event> nextPlayerEventArgumentCaptor = forClass(NextPlayer.Event.class);
 
+    @Mock
+    PieceCaptured pieceCaptured;
+    private final ArgumentCaptor<PieceCaptured.Event> pieceCapturedEventArgumentCaptor = forClass(PieceCaptured.Event.class);
+
+    @Mock
+    CheckMate checkMate;
+    private final ArgumentCaptor<CheckMate.Event> checkMateEventArgumentCaptor = forClass(CheckMate.Event.class);
+
     @Before
     public void setUp() {
         game = new Game();
+        whitePlayer = game.player(WHITE);
+        blackPlayer = game.player(BLACK);
         game.register(pieceMove);
         game.register(nextPlayer);
+        game.register(pieceCaptured);
+        game.register(checkMate);
     }
 
     @Test
     public void white_player_starts() {
-        game.player(WHITE).move(E2, E4);
+        whitePlayer.move(E2, E4);
         verify(pieceMove).handle(pieceMoveEventArgumentCaptor.capture());
         PieceMove.Event event = pieceMoveEventArgumentCaptor.getValue();
         assertThat(event.getPiece().getColor(), equalTo(WHITE));
@@ -54,7 +69,7 @@ public class ChessTest {
 
     @Test(expected = NotPlayerTurn.class)
     public void black_player_does_not_start() {
-        game.player(BLACK).move(E7, E5);
+        blackPlayer.move(E7, E5);
     }
 
     @Test(expected = SquareEmpty.class)
@@ -69,13 +84,49 @@ public class ChessTest {
 
     @Test
     public void players_move_once_each_turn() {
-        game.player(WHITE).move(E2, E4);
-        game.player(BLACK).move(E7, E5);
+        whitePlayer.move(E2, E4);
+        blackPlayer.move(E7, E5);
         verify(pieceMove, times(2)).handle(pieceMoveEventArgumentCaptor.capture());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void cannot_move_to_same_square() {
-        game.player(WHITE).move(E1, E1);
+        whitePlayer.move(E1, E1);
+    }
+
+    @Test
+    public void fools_mate() {
+        whitePlayer.move(F2, F3);
+        blackPlayer.move(E7, E5);
+        whitePlayer.move(G2, G4);
+        blackPlayer.move(D8, H4);
+        verify(checkMate).handle(checkMateEventArgumentCaptor.capture());
+        CheckMate.Event event = checkMateEventArgumentCaptor.getValue();
+        assertThat(event.getWinner(), equalTo(BLACK));
+    }
+
+    @Test
+    public void scholars_mate() {
+        whitePlayer.move(E2, E4);
+        blackPlayer.move(E7, E5);
+        whitePlayer.move(D1, H5);
+        blackPlayer.move(B8, C6);
+        whitePlayer.move(F1, C4);
+        blackPlayer.move(G8, F6);
+        whitePlayer.move(H5, F7);
+        verify(checkMate).handle(checkMateEventArgumentCaptor.capture());
+        CheckMate.Event event = checkMateEventArgumentCaptor.getValue();
+        assertThat(event.getWinner(), equalTo(WHITE));
+    }
+
+    @Test
+    public void king_can_attack_checking_piece() {
+        whitePlayer.move(E2, E4);
+        blackPlayer.move(E7, E5);
+        whitePlayer.move(D1, H5);
+        blackPlayer.move(B8, C6);
+        whitePlayer.move(H5, F7);
+        blackPlayer.move(E8, F7);
+        verify(pieceCaptured, times(2)).handle(pieceCapturedEventArgumentCaptor.capture());
     }
 }

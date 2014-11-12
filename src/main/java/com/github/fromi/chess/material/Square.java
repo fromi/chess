@@ -1,11 +1,11 @@
 package com.github.fromi.chess.material;
 
 import static com.github.fromi.chess.material.Board.FILES;
-import static java.lang.Integer.max;
-import static java.lang.Integer.min;
-import static java.lang.Math.abs;
+import static com.github.fromi.chess.material.Board.SIZE;
+import static java.lang.Math.*;
 import static java.util.stream.IntStream.range;
 
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableTable;
@@ -22,6 +22,8 @@ public class Square {
                         rankNumber -> squaresBuilder.put(FILES.get(fileNumber), rankNumber + 1, new Square(fileNumber, rankNumber))));
         SQUARES = squaresBuilder.build();
     }
+
+    private static final int[][] ADJACENT_SQUARES_DELTA = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
     private final int fileNumber;
     private final int rankNumber;
@@ -79,5 +81,19 @@ public class Square {
     private Stream<Square> rankSquaresBetween(int min, int max) {
         return range(min + 1, max).boxed()
                 .map(fileNumber -> SQUARES.get(FILES.get(fileNumber), rankNumber + 1));
+    }
+
+    public Stream<Square> adjacentSquares() {
+        return Arrays.stream(ADJACENT_SQUARES_DELTA)
+                .filter(deltas -> fileNumber + deltas[0] >= 0)
+                .filter(deltas -> fileNumber + deltas[0] < SIZE)
+                .filter(deltas -> rankNumber + deltas[1] >= 0)
+                .filter(deltas -> rankNumber + deltas[1] < SIZE)
+                .map((int[] deltas) -> SQUARES.get(FILES.get(fileNumber + deltas[0]), rankNumber + 1 + deltas[1]));
+    }
+
+    @Override
+    public String toString() {
+        return getFile() + String.valueOf(getRank());
     }
 }

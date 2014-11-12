@@ -2,11 +2,14 @@ package com.github.fromi.chess.material;
 
 import static com.github.fromi.chess.material.util.Squares.*;
 import static java.util.stream.Collectors.toList;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+
+import java.util.List;
 
 import org.junit.Test;
 
@@ -50,5 +53,17 @@ public class SquareTest {
     @Test(expected = IllegalArgumentException.class)
     public void cannot_return_squares_if_not_a_line_or_a_diagonal() {
         B3.squaresInBetween(F6);
+    }
+
+    @Test
+    public void adjacent_squares() {
+        List<Square> adjacentSquares = B8.adjacentSquares().collect(toList());
+        assertThat(adjacentSquares, hasSize(5));
+        assertThat(adjacentSquares, containsInAnyOrder(A8, C8, A7, B7, C7));
+    }
+
+    @Test
+    public void has_a_nice_label() {
+        assertThat(F5.toString(), equalTo("f5"));
     }
 }
