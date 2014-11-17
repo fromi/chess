@@ -1,8 +1,10 @@
 package com.github.fromi.chess;
 
+import static com.github.fromi.chess.material.Board.FILES;
 import static com.github.fromi.chess.material.Piece.Color.BLACK;
 import static com.github.fromi.chess.material.Piece.Color.WHITE;
 import static com.github.fromi.chess.material.Piece.Type.PAWN;
+import static com.github.fromi.chess.material.util.Pieces.*;
 import static com.github.fromi.chess.material.util.Squares.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -17,9 +19,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.github.fromi.chess.material.Piece;
 import com.github.fromi.chess.material.PieceCaptured;
 import com.github.fromi.chess.material.PieceMove;
 import com.github.fromi.chess.material.SquareEmpty;
+import com.github.fromi.chess.util.GameMemento;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ChessTest {
@@ -44,6 +48,10 @@ public class ChessTest {
     CheckMate checkMate;
     private final ArgumentCaptor<CheckMate.Event> checkMateEventArgumentCaptor = forClass(CheckMate.Event.class);
 
+    @Mock
+    Stalemate stalemate;
+    private final ArgumentCaptor<Stalemate.Event> stalemateEventArgumentCaptor = forClass(Stalemate.Event.class);
+
     @Before
     public void setUp() {
         game = new Game();
@@ -53,6 +61,7 @@ public class ChessTest {
         game.register(nextPlayer);
         game.register(pieceCaptured);
         game.register(checkMate);
+        game.register(stalemate);
     }
 
     @Test
@@ -128,5 +137,22 @@ public class ChessTest {
         whitePlayer.move(H5, F7);
         blackPlayer.move(E8, F7);
         verify(pieceCaptured, times(2)).handle(pieceCapturedEventArgumentCaptor.capture());
+    }
+
+    @Test
+    public void stalemate() {
+        Piece[] rank8 = {O, O, O, k, O, O, O, O};
+        Piece[] rank7 = {O, O, O, P, O, O, O, O};
+        Piece[] rank6 = {O, O, O, O, K, O, O, O};
+        Piece[] rank5 = {O, O, O, O, O, O, O, O};
+        Piece[] rank4 = {O, O, O, O, O, O, O, O};
+        Piece[] rank3 = {O, O, O, O, O, O, O, O};
+        Piece[] rank2 = {O, O, O, O, O, O, O, O};
+        Piece[] rank1 = {O, O, O, O, O, O, O, O};
+        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Game game = new Game(new GameMemento((file, rank) -> pieces[rank-1][FILES.indexOf(file)], WHITE));
+        game.register(stalemate);
+        game.player(WHITE).move(E6, D6);
+        verify(stalemate).handle(stalemateEventArgumentCaptor.capture());
     }
 }

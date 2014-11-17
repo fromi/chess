@@ -4,6 +4,7 @@ import static com.github.fromi.chess.material.Piece.Color.BLACK;
 import static com.github.fromi.chess.material.Piece.Color.WHITE;
 import static com.github.fromi.chess.material.Piece.PIECES;
 import static com.github.fromi.chess.material.Piece.Type.*;
+import static com.github.fromi.chess.material.Square.SQUARES;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -11,6 +12,7 @@ import static java.util.stream.IntStream.range;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import com.google.common.collect.ArrayTable;
 import com.google.common.eventbus.EventBus;
@@ -47,14 +49,14 @@ public class Board {
         KNIGHTS_STARTING_FILES.forEach(file -> table.put(color.getFirstRank(), file, PIECES.get(color, KNIGHT)));
         ROOKS_STARTING_FILES.forEach(file -> table.put(color.getFirstRank(), file, PIECES.get(color, ROOK)));
         table.columnKeySet().forEach(file -> table.put(color.getPawnsStartingRank(), file, PIECES.get(color, PAWN)));
-        kingSquares.put(color, Square.SQUARES.get(KINGS_STARTING_FILE, color.getFirstRank()));
+        kingSquares.put(color, SQUARES.get(KINGS_STARTING_FILE, color.getFirstRank()));
     }
 
     private void putPieceAt(Piece piece, Character file, Integer rank) {
         if (piece != null) {
             table.put(rank, file, piece);
             if (piece.getType() == KING) {
-                kingSquares.put(piece.getColor(), Square.SQUARES.get(file, rank));
+                kingSquares.put(piece.getColor(), SQUARES.get(file, rank));
             }
         }
     }
@@ -132,7 +134,7 @@ public class Board {
         return table.cellSet().stream()
                 .filter(cell -> cell.getValue() != null)
                 .filter(cell -> cell.getValue().getColor() == attacker)
-                .anyMatch(cell -> attackAllowed(Square.SQUARES.get(cell.getColumnKey(), cell.getRowKey()), square));
+                .anyMatch(cell -> attackAllowed(SQUARES.get(cell.getColumnKey(), cell.getRowKey()), square));
     }
 
     private boolean squareIsUnderNonKingAttack(Square square, Piece.Color attacker) {
@@ -140,7 +142,7 @@ public class Board {
                 .filter(cell -> cell.getValue() != null)
                 .filter(cell -> cell.getValue().getColor() == attacker)
                 .filter(cell -> cell.getValue().getType() != KING)
-                .anyMatch(cell -> attackAllowed(Square.SQUARES.get(cell.getColumnKey(), cell.getRowKey()), square));
+                .anyMatch(cell -> attackAllowed(SQUARES.get(cell.getColumnKey(), cell.getRowKey()), square));
     }
 
     private boolean thereIsAnotherPieceInTheWay(Piece piece, Square origin, Square destination) {
@@ -164,12 +166,12 @@ public class Board {
 
     private boolean mate(Square checkingPieceSquare) {
         Piece.Color kingColor = getPieceAt(checkingPieceSquare).getColor().opponent();
-        return !kingCanEscape(kingColor)
+        return !kingCanMove(kingColor)
                 && !squareIsUnderNonKingAttack(checkingPieceSquare, kingColor)
                 && !canInterposePiece(checkingPieceSquare, kingSquares.get(kingColor));
     }
 
-    private boolean kingCanEscape(Piece.Color checkedKingColor) {
+    private boolean kingCanMove(Piece.Color checkedKingColor) {
         return kingSquares.get(checkedKingColor).adjacentSquares()
                 .anyMatch(square -> !containsFriendPiece(square, checkedKingColor)
                         && !squareIsUnderAttack(square, checkedKingColor.opponent()));
@@ -192,8 +194,22 @@ public class Board {
                 .filter(cell -> cell.getValue() != null)
                 .filter(cell -> cell.getValue().getColor() == playerColor)
                 .filter(cell -> cell.getValue().getType() != KING)
-                .filter(cell -> cell.getValue().moveAllowed(Square.SQUARES.get(cell.getColumnKey(), cell.getRowKey()), square))
-                .anyMatch(cell -> !thereIsAnotherPieceInTheWay(cell.getValue(), Square.SQUARES.get(cell.getColumnKey(), cell.getRowKey()), square));
+                .filter(cell -> cell.getValue().moveAllowed(SQUARES.get(cell.getColumnKey(), cell.getRowKey()), square))
+                .anyMatch(cell -> !thereIsAnotherPieceInTheWay(cell.getValue(), SQUARES.get(cell.getColumnKey(), cell.getRowKey()), square));
+    }
+
+    public boolean stalemate(Piece.Color playerColor) {
+        return !table.cellSet().stream()
+                .filter(cell -> cell.getValue() != null)
+                .filter(cell -> cell.getValue().getColor() == playerColor)
+                .anyMatch(cell -> canMove(cell.getValue(), SQUARES.get(cell.getColumnKey(), cell.getRowKey())));
+    }
+
+    private boolean canMove(Piece piece, Square origin) {
+        Predicate<Square> emptySquarePredicate = square -> table.get(square.getRank(), square.getFile()) == null;
+        Predicate<Square> opponentSquarePredicate = square -> containsFriendPiece(square, piece.getColor().opponent());
+        Predicate<Square> squareUnderAttackPredicate = square -> squareIsUnderAttack(square, piece.getColor().opponent());
+        return piece.canMoveOrAttack(origin, emptySquarePredicate, opponentSquarePredicate, squareUnderAttackPredicate);
     }
 
     public Memento memento() {

@@ -23,7 +23,12 @@ public class Square {
         SQUARES = squaresBuilder.build();
     }
 
-    private static final int[][] ADJACENT_SQUARES_DELTA = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+    private static final int[][] ADJACENT_DIAGONAL_SQUARES_DELTA = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+    private static final int[][] ADJACENT_LINE_SQUARES_DELTA = {{-1, 0}, {1, 0}, {0, 1}, {0, -1}};
+    private static final int[][] ADJACENT_SQUARES_DELTA = Stream.concat(
+            Arrays.stream(ADJACENT_DIAGONAL_SQUARES_DELTA),
+            Arrays.stream(ADJACENT_LINE_SQUARES_DELTA)).toArray(int[][]::new);
+    private static final int[][] KNIGHT_MOVES_DELTA = {{-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {-2, 1}, {-2, -1}, {2, -1}, {2, 1}};
 
     private final int fileNumber;
     private final int rankNumber;
@@ -84,7 +89,23 @@ public class Square {
     }
 
     public Stream<Square> adjacentSquares() {
-        return Arrays.stream(ADJACENT_SQUARES_DELTA)
+        return deltasToSquares(ADJACENT_SQUARES_DELTA);
+    }
+
+    public Stream<Square> adjacentLineSquares() {
+        return deltasToSquares(ADJACENT_LINE_SQUARES_DELTA);
+    }
+
+    public Stream<Square> adjacentDiagonalSquares() {
+        return deltasToSquares(ADJACENT_DIAGONAL_SQUARES_DELTA);
+    }
+
+    public Stream<Square> knightMoveSquares() {
+        return deltasToSquares(KNIGHT_MOVES_DELTA);
+    }
+
+    private Stream<Square> deltasToSquares(int[][] squaresDeltas) {
+        return Arrays.stream(squaresDeltas)
                 .filter(deltas -> fileNumber + deltas[0] >= 0)
                 .filter(deltas -> fileNumber + deltas[0] < SIZE)
                 .filter(deltas -> rankNumber + deltas[1] >= 0)

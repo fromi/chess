@@ -5,6 +5,7 @@ import static com.google.common.collect.Maps.toMap;
 import static java.util.EnumSet.allOf;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.github.fromi.chess.material.Board;
 import com.github.fromi.chess.material.Piece;
@@ -20,11 +21,21 @@ public class Game {
         players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, color == WHITE));
     }
 
+    public Game(Memento memento) {
+        board = new Board(memento.getBoard(), eventBus);
+        players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, color == memento.getActivePlayer().orElse(null)));
+    }
+
     public void register(Object listener) {
         eventBus.register(listener);
     }
 
     public Player player(Piece.Color color) {
         return players.get(color);
+    }
+
+    public static interface Memento {
+        Board.Memento getBoard();
+        Optional<Piece.Color> getActivePlayer();
     }
 }

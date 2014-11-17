@@ -186,7 +186,7 @@ public class BoardTest {
         Piece[] rank4 = {O, O, O, O, O, O, O, O};
         Piece[] rank3 = {O, O, O, O, O, O, O, O};
         Piece[] rank2 = {O, O, O, O, O, O, O, O};
-        Piece[] rank1 = {O, O, O, O, Q, k, O, O};
+        Piece[] rank1 = {O, O, O, O, Q, K, O, O};
         Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
         Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
         board.movePiece(D8, F6);

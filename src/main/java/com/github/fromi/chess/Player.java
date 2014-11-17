@@ -36,6 +36,8 @@ public class Player {
         board.movePiece(origin, destination);
         if (board.checkMate(destination)) {
             eventBus.post(new CheckMate.Event(color));
+        } else if (board.stalemate(color.opponent())) {
+            eventBus.post(new Stalemate.Event());
         } else {
             eventBus.post(new NextPlayer.Event());
         }
