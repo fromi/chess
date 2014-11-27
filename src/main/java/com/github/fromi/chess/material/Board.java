@@ -73,6 +73,12 @@ public class Board {
         return new PieceSet(color);
     }
 
+    public Piece promotePawnTo(Piece.Color color, Piece.Type type) {
+        return pieces(color).stream()
+                .filter(piece -> piece instanceof Pawn).map(piece -> (Pawn) piece)
+                .filter(Pawn::canBePromoted).findFirst().get().promoteTo(type);
+    }
+
     public Memento memento() {
         return () -> table.cellSet().stream().filter(cell -> cell.getValue() != null).map(cell -> cell.getValue().memento()).iterator();
     }

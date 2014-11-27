@@ -52,16 +52,16 @@ public class IllegalMove extends IllegalArgumentException {
     }
 
     @Override
-    public String toString() {
+    public String getMessage() {
         return String.format("%s cannot move to %s because %s", piece, destination, reason());
     }
 
     public enum MoveRule {
-        CANNOT_MOVE_ON_FRIEND("You may not move a piece to a square with another piece the same color"),
-        KING_MUST_NOT_BE_IN_CHECK("You may not make a move that leaves or puts your king in check"),
-        CANNOT_ATTACK_THIS_WAY("This piece cannot attack this way"),
-        CANNOT_MOVE_THIS_WAY("This piece cannot move this way"),
-        CANNOT_GO_THROUGH_ANOTHER_PIECE("This piece cannot go through another piece");
+        CANNOT_MOVE_ON_FRIEND("you may not move a piece to a square with another piece the same color"),
+        KING_MUST_NOT_BE_IN_CHECK("you may not make a move that leaves or puts your king in check"),
+        CANNOT_ATTACK_THIS_WAY("this piece cannot attack this way"),
+        CANNOT_MOVE_THIS_WAY("this piece cannot move this way"),
+        CANNOT_GO_THROUGH_ANOTHER_PIECE("this piece cannot go through another piece");
 
         private final String details;
 

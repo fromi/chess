@@ -262,5 +262,8 @@ public class BoardTest {
         Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
         Board board = new Board(createBoardMemento(pieces), eventBus);
         assertFalse(board.pieceAt(B7).get().canMove());
+        exception.expect(IllegalMove.class);
+        exception.expectMessage("BLACK PAWN in b7 cannot move to b6 because " + KING_MUST_NOT_BE_IN_CHECK.toString());
+        board.pieceAt(B7).get().moveTo(B6);
     }
 }

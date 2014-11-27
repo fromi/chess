@@ -12,7 +12,7 @@ public abstract class Piece {
     private static final int BLACK_PAWN_RANK = 7;
 
     protected final Color color;
-    private final transient Board board;
+    protected final transient Board board;
     protected Square position;
 
     protected Piece(Color color, Board board, Square position) {

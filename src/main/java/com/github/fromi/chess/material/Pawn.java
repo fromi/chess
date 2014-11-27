@@ -5,7 +5,7 @@ import static com.github.fromi.chess.material.Square.SQUARES;
 
 import java.util.stream.Stream;
 
-class Pawn extends Piece {
+public class Pawn extends Piece {
 
     private static final int FIRST_MOVE_MAX_DISTANCE = 2;
 
@@ -53,5 +53,19 @@ class Pawn extends Piece {
 
     private boolean pawnAlreadyMoved() {
         return color.getPawnsStartingRank() != position.getRank();
+    }
+
+    public boolean canBePromoted() {
+        return position.getRank() == color.opponent().getFirstRank();
+    }
+
+    public Piece promoteTo(Type type) {
+        if (type == Type.PAWN) {
+            throw new IllegalArgumentException("Pawn must be promoted to another type of piece");
+        }
+        Piece piece = type.createPiece(color, board, position);
+        board.table.put(position.getRank(), position.getFile(), piece);
+        board.eventBus.post(new Promotion.Event(type, position));
+        return piece;
     }
 }

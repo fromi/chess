@@ -1,11 +1,12 @@
 package com.github.fromi.chess;
 
+import static com.github.fromi.chess.Player.State.PLAYING;
+import static com.github.fromi.chess.Player.State.WAITING;
 import static com.github.fromi.chess.material.Piece.Color.WHITE;
 import static com.google.common.collect.Maps.toMap;
 import static java.util.EnumSet.allOf;
 
 import java.util.Map;
-import java.util.Optional;
 
 import com.github.fromi.chess.material.Board;
 import com.github.fromi.chess.material.Piece;
@@ -18,12 +19,12 @@ public class Game {
 
     public Game() {
         board = new Board(eventBus);
-        players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, color == WHITE));
+        players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, color == WHITE ? PLAYING : WAITING));
     }
 
     public Game(Memento memento) {
         board = new Board(memento.getBoard(), eventBus);
-        players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, color == memento.getActivePlayer().orElse(null)));
+        players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, memento.getPlayersStates().get(color)));
     }
 
     public void register(Object listener) {
@@ -36,6 +37,6 @@ public class Game {
 
     public static interface Memento {
         Board.Memento getBoard();
-        Optional<Piece.Color> getActivePlayer();
+        Map<Piece.Color, Player.State> getPlayersStates();
     }
 }

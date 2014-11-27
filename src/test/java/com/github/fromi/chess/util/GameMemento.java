@@ -1,18 +1,23 @@
 package com.github.fromi.chess.util;
 
-import java.util.Optional;
+import static com.github.fromi.chess.Player.State.PLAYING;
+import static com.github.fromi.chess.Player.State.WAITING;
+import static com.github.fromi.chess.material.Piece.Color.BLACK;
+import static com.github.fromi.chess.material.Piece.Color.WHITE;
+
+import java.util.Map;
 
 import com.github.fromi.chess.Game;
+import com.github.fromi.chess.Player;
 import com.github.fromi.chess.material.Board;
 import com.github.fromi.chess.material.Piece;
+import com.google.common.collect.ImmutableMap;
 
 public class GameMemento implements Game.Memento {
     private final Board.Memento board;
-    private final Optional<Piece.Color> activePlayer;
 
     public GameMemento(Board.Memento board) {
         this.board = board;
-        this.activePlayer = Optional.of(Piece.Color.WHITE);
     }
 
     @Override
@@ -21,7 +26,7 @@ public class GameMemento implements Game.Memento {
     }
 
     @Override
-    public Optional<Piece.Color> getActivePlayer() {
-        return activePlayer;
+    public Map<Piece.Color, Player.State> getPlayersStates() {
+        return ImmutableMap.of(WHITE, PLAYING, BLACK, WAITING);
     }
 }

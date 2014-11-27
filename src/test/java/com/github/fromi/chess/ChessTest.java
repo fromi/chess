@@ -2,7 +2,7 @@ package com.github.fromi.chess;
 
 import static com.github.fromi.chess.material.Piece.Color.BLACK;
 import static com.github.fromi.chess.material.Piece.Color.WHITE;
-import static com.github.fromi.chess.material.Piece.Type.PAWN;
+import static com.github.fromi.chess.material.Piece.Type.*;
 import static com.github.fromi.chess.material.util.Boards.createBoardMemento;
 import static com.github.fromi.chess.material.util.Pieces.*;
 import static com.github.fromi.chess.material.util.Squares.*;
@@ -21,6 +21,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.github.fromi.chess.material.PieceCaptured;
 import com.github.fromi.chess.material.PieceMove;
+import com.github.fromi.chess.material.Promotion;
 import com.github.fromi.chess.material.SquareEmpty;
 import com.github.fromi.chess.material.util.Pieces;
 import com.github.fromi.chess.util.GameMemento;
@@ -53,6 +54,10 @@ public class ChessTest {
     Stalemate stalemate;
     private final ArgumentCaptor<Stalemate.Event> stalemateEventArgumentCaptor = forClass(Stalemate.Event.class);
 
+    @Mock
+    Promotion promotion;
+    private final ArgumentCaptor<Promotion.Event> promotionEventArgumentCaptor = forClass(Promotion.Event.class);
+
     @Before
     public void setUp() {
         game = new Game();
@@ -77,7 +82,7 @@ public class ChessTest {
         verify(nextPlayer).handle(nextPlayerEventArgumentCaptor.capture());
     }
 
-    @Test(expected = NotPlayerTurn.class)
+    @Test(expected = IllegalAction.class)
     public void black_player_does_not_start() {
         blackPlayer.move(E7, E5);
     }
@@ -155,5 +160,63 @@ public class ChessTest {
         game.register(stalemate);
         game.player(WHITE).move(E6, D6);
         verify(stalemate).handle(stalemateEventArgumentCaptor.capture());
+    }
+
+    @Test
+    public void promote_pawn() {
+        Pieces.Piece[] rank8 = {_, _, _, _, _, _, k, _};
+        Pieces.Piece[] rank7 = {_, _, _, P, K, _, _, _};
+        Pieces.Piece[] rank6 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, p, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank1 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Game game = new Game(new GameMemento(createBoardMemento(pieces)));
+        game.register(promotion);
+        game.player(WHITE).move(D7, D8);
+        game.player(WHITE).promoteTo(QUEEN);
+        verify(promotion).handle(promotionEventArgumentCaptor.capture());
+        Promotion.Event event = promotionEventArgumentCaptor.getValue();
+        assertThat(event.getPieceType(), equalTo(QUEEN));
+        assertThat(event.getPosition(), equalTo(D8));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void cannot_promote_into_pawn() {
+        Pieces.Piece[] rank8 = {_, _, _, _, _, _, k, _};
+        Pieces.Piece[] rank7 = {_, _, _, P, K, _, _, _};
+        Pieces.Piece[] rank6 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, p, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank1 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Game game = new Game(new GameMemento(createBoardMemento(pieces)));
+        game.player(WHITE).move(D7, D8);
+        game.player(WHITE).promoteTo(PAWN);
+    }
+
+    @Test(expected = IllegalAction.class)
+    public void cannot_promote_anytime() {
+        game.player(WHITE).promoteTo(KNIGHT);
+    }
+
+    @Test(expected = IllegalAction.class)
+    public void cannot_move_when_promotion_is_required() {
+        Pieces.Piece[] rank8 = {_, _, _, _, _, _, k, _};
+        Pieces.Piece[] rank7 = {_, _, _, P, K, _, _, _};
+        Pieces.Piece[] rank6 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, p, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank1 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Game game = new Game(new GameMemento(createBoardMemento(pieces)));
+        game.player(WHITE).move(D7, D8);
+        game.player(WHITE).move(E7, E8);
     }
 }
