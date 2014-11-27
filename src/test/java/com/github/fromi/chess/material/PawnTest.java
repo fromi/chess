@@ -2,54 +2,86 @@ package com.github.fromi.chess.material;
 
 import static com.github.fromi.chess.material.Piece.Color.BLACK;
 import static com.github.fromi.chess.material.Piece.Color.WHITE;
-import static com.github.fromi.chess.material.Piece.PIECES;
-import static com.github.fromi.chess.material.Piece.Type.PAWN;
 import static com.github.fromi.chess.material.util.Squares.*;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.*;
 
+import org.junit.Rule;
 import org.junit.Test;
 
+import com.github.fromi.chess.material.util.Boards;
+
+@SuppressWarnings("JavacQuirks")
 public class PawnTest {
-    private final Piece whitePawn = PIECES.get(WHITE, PAWN);
-    private final Piece blackPawn = PIECES.get(BLACK, PAWN);
+    // Pawn position
+    private static final Boolean O = false;
+    // Invalid moves
+    private static final Boolean _ = false;
+    // Valid moves
+    private static final Boolean X = true;
+
+    @Rule
+    public final MoveRule moveRule = new MoveRule();
 
     @Test
     public void pawn_can_move_one_step_forward() {
-        assertTrue(whitePawn.moveAllowed(E5, E6));
-        assertTrue(blackPawn.moveAllowed(E6, E5));
+        Pawn pawn = new Pawn(WHITE, Boards.empty(), D4);
+        Boolean[] rank8 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank7 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank6 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank5 = {_, _, _, X, _, _, _, _};
+        Boolean[] rank4 = {_, _, _, O, _, _, _, _};
+        Boolean[] rank3 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank2 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank1 = {_, _, _, _, _, _, _, _};
+        Boolean[][] validMoves = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        moveRule.with(pawn).expect(validMoves);
     }
 
     @Test
-    public void pawn_cannot_move_backwards() {
-        assertFalse(whitePawn.moveAllowed(E6, E5));
-        assertFalse(blackPawn.moveAllowed(E5, E6));
+    public void for_black_pawn_forward_is_the_other_way() {
+        Pawn pawn = new Pawn(BLACK, Boards.empty(), D4);
+        Boolean[] rank8 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank7 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank6 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank5 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank4 = {_, _, _, O, _, _, _, _};
+        Boolean[] rank3 = {_, _, _, X, _, _, _, _};
+        Boolean[] rank2 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank1 = {_, _, _, _, _, _, _, _};
+        Boolean[][] validMoves = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        moveRule.with(pawn).expect(validMoves);
     }
 
     @Test
-    public void pawn_cannot_change_file() {
-        assertFalse(whitePawn.moveAllowed(E6, F5));
-        assertFalse(blackPawn.moveAllowed(A5, B6));
+    public void white_pawn_can_move_twice_on_first_move() {
+        Pawn pawn = new Pawn(WHITE, Boards.empty(), B2);
+        Boolean[] rank8 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank7 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank6 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank5 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank4 = {_, X, _, _, _, _, _, _};
+        Boolean[] rank3 = {_, X, _, _, _, _, _, _};
+        Boolean[] rank2 = {_, O, _, _, _, _, _, _};
+        Boolean[] rank1 = {_, _, _, _, _, _, _, _};
+        Boolean[][] validMoves = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        moveRule.with(pawn).expect(validMoves);
     }
 
     @Test
-    public void pawn_can_move_twice_on_first_move_only() {
-        assertTrue(whitePawn.moveAllowed(E2, E4));
-        assertTrue(blackPawn.moveAllowed(E7, E5));
-        assertFalse(whitePawn.moveAllowed(E3, E5));
-        assertFalse(blackPawn.moveAllowed(E5, E3));
+    public void black_pawn_can_move_twice_on_first_move() {
+        Pawn pawn = new Pawn(BLACK, Boards.empty(), C7);
+        Boolean[] rank8 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank7 = {_, _, O, _, _, _, _, _};
+        Boolean[] rank6 = {_, _, X, _, _, _, _, _};
+        Boolean[] rank5 = {_, _, X, _, _, _, _, _};
+        Boolean[] rank4 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank3 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank2 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank1 = {_, _, _, _, _, _, _, _};
+        Boolean[][] validMoves = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        moveRule.with(pawn).expect(validMoves);
     }
 
-    @Test
-    public void pawn_cannot_move_more_than_2_squares() {
-        assertFalse(whitePawn.moveAllowed(E2, E5));
-    }
-
-    @Test(expected = UnsupportedOperationException.class)
-    public void pawn_move_capability_depends_on_their_color() {
-        PAWN.moveAllowed(E6, E5);
-    }
-
+    /*
     @Test
     public void pawn_only_attack_forward_diagonally() {
         assertTrue(whitePawn.attackAllowed(E2, D3));
@@ -66,4 +98,5 @@ public class PawnTest {
     public void test_to_string() {
         assertThat(whitePawn.toString(), equalTo("WHITE PAWN"));
     }
+*/
 }

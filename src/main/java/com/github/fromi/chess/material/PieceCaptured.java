@@ -9,16 +9,22 @@ public interface PieceCaptured {
 
     public class Event {
 
-        private final Piece piece;
+        private final Piece.Color pieceColor;
+        private final Piece.Type pieceType;
         private final Square position;
 
-        public Event(Piece piece, Square position) {
-            this.piece = piece;
+        public Event(Piece.Color pieceColor, Piece.Type pieceType, Square position) {
+            this.pieceColor = pieceColor;
+            this.pieceType = pieceType;
             this.position = position;
         }
 
-        public Piece getPiece() {
-            return piece;
+        public Piece.Color getPieceColor() {
+            return pieceColor;
+        }
+
+        public Piece.Type getPieceType() {
+            return pieceType;
         }
 
         public Square getPosition() {

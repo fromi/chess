@@ -1,28 +1,37 @@
 package com.github.fromi.chess.material;
 
-import static com.github.fromi.chess.material.Piece.Type.BISHOP;
-import static com.github.fromi.chess.material.util.Squares.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.github.fromi.chess.material.Piece.Color.WHITE;
+import static com.github.fromi.chess.material.util.Squares.G4;
 
+import org.junit.Rule;
 import org.junit.Test;
 
+import com.github.fromi.chess.material.util.Boards;
+
+@SuppressWarnings("JavacQuirks")
 public class BishopTest {
+    // Bishop position
+    private static final Boolean O = false;
+    // Invalid moves
+    private static final Boolean _ = false;
+    // Valid moves
+    private static final Boolean X = true;
+
+    @Rule
+    public final MoveRule moveRule = new MoveRule();
 
     @Test
     public void bishop_can_move_in_diagonals_only() {
-        assertFalse(BISHOP.moveAllowed(A1, A7));
-        assertFalse(BISHOP.moveAllowed(B5, B3));
-        assertFalse(BISHOP.moveAllowed(A1, A7));
-        assertFalse(BISHOP.moveAllowed(B5, B3));
-        assertFalse(BISHOP.moveAllowed(G3, B3));
-        assertFalse(BISHOP.moveAllowed(F2, A2));
-        assertFalse(BISHOP.moveAllowed(C6, H6));
-        assertFalse(BISHOP.moveAllowed(G5, A5));
-
-        assertTrue(BISHOP.moveAllowed(A1, B2));
-        assertTrue(BISHOP.moveAllowed(F4, D6));
-        assertTrue(BISHOP.moveAllowed(H8, A1));
-        assertTrue(BISHOP.moveAllowed(B6, E3));
+        Bishop bishop = new Bishop(WHITE, Boards.empty(), G4);
+        Boolean[] rank8 = {_, _, X, _, _, _, _, _};
+        Boolean[] rank7 = {_, _, _, X, _, _, _, _};
+        Boolean[] rank6 = {_, _, _, _, X, _, _, _};
+        Boolean[] rank5 = {_, _, _, _, _, X, _, X};
+        Boolean[] rank4 = {_, _, _, _, _, _, O, _};
+        Boolean[] rank3 = {_, _, _, _, _, X, _, X};
+        Boolean[] rank2 = {_, _, _, _, X, _, _, _};
+        Boolean[] rank1 = {_, _, _, X, _, _, _, _};
+        Boolean[][] validMoves = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        moveRule.with(bishop).expect(validMoves);
     }
 }

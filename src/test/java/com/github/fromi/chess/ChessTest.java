@@ -1,9 +1,9 @@
 package com.github.fromi.chess;
 
-import static com.github.fromi.chess.material.Board.FILES;
 import static com.github.fromi.chess.material.Piece.Color.BLACK;
 import static com.github.fromi.chess.material.Piece.Color.WHITE;
 import static com.github.fromi.chess.material.Piece.Type.PAWN;
+import static com.github.fromi.chess.material.util.Boards.createBoardMemento;
 import static com.github.fromi.chess.material.util.Pieces.*;
 import static com.github.fromi.chess.material.util.Squares.*;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -19,12 +19,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.github.fromi.chess.material.Piece;
 import com.github.fromi.chess.material.PieceCaptured;
 import com.github.fromi.chess.material.PieceMove;
 import com.github.fromi.chess.material.SquareEmpty;
+import com.github.fromi.chess.material.util.Pieces;
 import com.github.fromi.chess.util.GameMemento;
 
+@SuppressWarnings("JavacQuirks")
 @RunWith(MockitoJUnitRunner.class)
 public class ChessTest {
 
@@ -69,8 +70,8 @@ public class ChessTest {
         whitePlayer.move(E2, E4);
         verify(pieceMove).handle(pieceMoveEventArgumentCaptor.capture());
         PieceMove.Event event = pieceMoveEventArgumentCaptor.getValue();
-        assertThat(event.getPiece().getColor(), equalTo(WHITE));
-        assertThat(event.getPiece().getType(), equalTo(PAWN));
+        assertThat(event.getPieceColor(), equalTo(WHITE));
+        assertThat(event.getPieceType(), equalTo(PAWN));
         assertThat(event.getOrigin(), equalTo(E2));
         assertThat(event.getDestination(), equalTo(E4));
         verify(nextPlayer).handle(nextPlayerEventArgumentCaptor.capture());
@@ -141,16 +142,16 @@ public class ChessTest {
 
     @Test
     public void stalemate() {
-        Piece[] rank8 = {O, O, O, k, O, O, O, O};
-        Piece[] rank7 = {O, O, O, P, O, O, O, O};
-        Piece[] rank6 = {O, O, O, O, K, O, O, O};
-        Piece[] rank5 = {O, O, O, O, O, O, O, O};
-        Piece[] rank4 = {O, O, O, O, O, O, O, O};
-        Piece[] rank3 = {O, O, O, O, O, O, O, O};
-        Piece[] rank2 = {O, O, O, O, O, O, O, O};
-        Piece[] rank1 = {O, O, O, O, O, O, O, O};
-        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Game game = new Game(new GameMemento((file, rank) -> pieces[rank-1][FILES.indexOf(file)], WHITE));
+        Pieces.Piece[] rank8 = {_, _, _, k, _, _, _, _};
+        Pieces.Piece[] rank7 = {_, _, _, P, _, _, _, _};
+        Pieces.Piece[] rank6 = {_, _, _, _, K, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank1 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Game game = new Game(new GameMemento(createBoardMemento(pieces)));
         game.register(stalemate);
         game.player(WHITE).move(E6, D6);
         verify(stalemate).handle(stalemateEventArgumentCaptor.capture());

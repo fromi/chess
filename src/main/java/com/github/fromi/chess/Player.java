@@ -2,9 +2,12 @@ package com.github.fromi.chess;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.Optional;
+
 import com.github.fromi.chess.material.Board;
 import com.github.fromi.chess.material.Piece;
 import com.github.fromi.chess.material.Square;
+import com.github.fromi.chess.material.SquareEmpty;
 import com.google.common.eventbus.EventBus;
 
 public class Player {
@@ -30,16 +33,25 @@ public class Player {
         if (!isPlaying) {
             throw new NotPlayerTurn();
         }
-        if (board.getPieceAt(origin).getColor() != color) {
+        Optional<Piece> pieceOptional = board.pieceAt(origin);
+        if (!pieceOptional.isPresent()) {
+            throw new SquareEmpty();
+        }
+        Piece piece = pieceOptional.get();
+        if (!piece.hasSame(color)) {
             throw new CannotMoveOpponentPiece();
         }
-        board.movePiece(origin, destination);
-        if (board.checkMate(destination)) {
+        piece.moveTo(destination);
+        if (piece.checkMate()) {
             eventBus.post(new CheckMate.Event(color));
-        } else if (board.stalemate(color.opponent())) {
+        } else if (opponentIsStalemate()) {
             eventBus.post(new Stalemate.Event());
         } else {
             eventBus.post(new NextPlayer.Event());
         }
+    }
+
+    private boolean opponentIsStalemate() {
+        return !board.pieces(color.opponent()).stream().anyMatch(Piece::canMove);
     }
 }

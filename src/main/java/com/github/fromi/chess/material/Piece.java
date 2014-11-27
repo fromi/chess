@@ -1,159 +1,162 @@
 package com.github.fromi.chess.material;
 
-import static com.github.fromi.chess.material.Piece.Color.BLACK;
-import static com.github.fromi.chess.material.Piece.Color.WHITE;
-import static com.github.fromi.chess.material.Piece.Type.*;
+import static com.github.fromi.chess.material.Piece.Type.KING;
 
-import java.util.function.Predicate;
+import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.google.common.collect.ImmutableTable;
-import com.google.common.collect.Table;
-
-public class Piece {
-
-    public static final Table<Color, Type, Piece> PIECES = new ImmutableTable.Builder<Color, Type, Piece>()
-            .put(WHITE, KING, new Piece(WHITE, KING))
-            .put(WHITE, QUEEN, new Piece(WHITE, QUEEN))
-            .put(WHITE, BISHOP, new Piece(WHITE, BISHOP))
-            .put(WHITE, KNIGHT, new Piece(WHITE, KNIGHT))
-            .put(WHITE, ROOK, new Piece(WHITE, ROOK))
-            .put(WHITE, PAWN, new Piece(WHITE, PAWN))
-            .put(BLACK, KING, new Piece(BLACK, KING))
-            .put(BLACK, QUEEN, new Piece(BLACK, QUEEN))
-            .put(BLACK, BISHOP, new Piece(BLACK, BISHOP))
-            .put(BLACK, KNIGHT, new Piece(BLACK, KNIGHT))
-            .put(BLACK, ROOK, new Piece(BLACK, ROOK))
-            .put(BLACK, PAWN, new Piece(BLACK, PAWN))
-            .build();
+public abstract class Piece {
     private static final int WHITE_FIRST_RANK = 1;
+    private static final int WHITE_PAWN_RANK = 2;
     private static final int BLACK_FIRST_RANK = 8;
-    private static final int WHITE_PAWNS_STARTING_RANK = 2;
-    private static final int BLACK_PAWNS_STARTING_RANK = 7;
-    private static final int PAWN_SPECIAL_FIRST_MOVE_DISTANCE = 2;
-    private static final int KNIGHT_MOVE_DISTANCE = 3;
+    private static final int BLACK_PAWN_RANK = 7;
 
-    private final Color color;
-    private final Type type;
+    protected final Color color;
+    private final transient Board board;
+    protected Square position;
 
-    private Piece(Color color, Type type) {
+    protected Piece(Color color, Board board, Square position) {
         this.color = color;
-        this.type = type;
+        this.board = board;
+        this.position = position;
     }
 
-    public Color getColor() {
-        return color;
+    public boolean hasSame(Color expectedColor) {
+        return color == expectedColor;
     }
 
-    public Type getType() {
-        return type;
+    public void moveTo(Square destination) {
+        if (!canMoveTo(destination)) {
+            throw new IllegalMove(this, board, destination);
+        }
+        board.eventBus.post(new PieceMove.Event(color, getType(), position, destination));
+        board.pieceAt(destination).ifPresent(piece -> board.eventBus.post(new PieceCaptured.Event(piece.color, piece.getType(), destination)));
+        doMoveTo(destination);
     }
 
-    public boolean moveAllowed(Square origin, Square destination) {
-        if (type == PAWN) {
-            return color.pawnMoveAllowed(origin, destination);
+    public boolean canMove() {
+        return potentialMinimalMoves().anyMatch(this::canMoveTo);
+    }
+
+    public boolean checkMate() {
+        return check() && mate();
+    }
+
+    protected abstract Type getType();
+
+    protected abstract boolean onEmptyBoardCouldMoveTo(Square destination);
+
+    protected boolean onEmptyBoardCouldAttack(Square destination) {
+        return onEmptyBoardCouldMoveTo(destination);
+    }
+
+    protected abstract Stream<Square> potentialMinimalMoves();
+
+    // TODO en passant
+    private boolean canMoveTo(Square destination) {
+        if (board.pieceAt(destination).isPresent()) {
+            return canAttack(board.pieceAt(destination).get());
         } else {
-            return type.moveAllowed(origin, destination);
+            return canMoveToEmpty(destination);
         }
     }
 
-    public Stream<Square> squaresGoingThrough(Square origin, Square destination) {
-        if (type == KNIGHT) {
-            return Stream.empty();
-        } else {
-            return origin.squaresInBetween(destination);
+    private boolean canAttack(Piece target) {
+        return !target.hasSame(color) && canAttack(target.position);
+    }
+
+    private boolean canAttack(Square destination) {
+        return onEmptyBoardCouldAttack(destination) && pathEmptyTo(destination) && myKingWillNotBeCheckIfIMoveTo(destination);
+    }
+
+    private boolean canMoveToEmpty(Square destination) {
+        return onEmptyBoardCouldMoveTo(destination) && pathEmptyTo(destination) && myKingWillNotBeCheckIfIMoveTo(destination);
+    }
+
+    private void doMoveTo(Square destination) {
+        board.table.erase(position.getRank(), position.getFile());
+        board.table.put(destination.getRank(), destination.getFile(), this);
+        position = destination;
+    }
+
+    private void revertMove(Square origin, Square destination, Optional<Piece> target) {
+        board.table.put(origin.getRank(), origin.getFile(), this);
+        board.table.put(destination.getRank(), destination.getFile(), target.orElse(null));
+        position = origin;
+    }
+
+    private boolean myKingWillNotBeCheckIfIMoveTo(Square destination) {
+        Square origin = position;
+        Optional<Piece> targetPiece = board.pieceAt(destination);
+        try {
+            doMoveTo(destination);
+            return !kingIsCheck();
+        } finally {
+            revertMove(origin, destination, targetPiece);
         }
     }
 
-    public boolean attackAllowed(Square origin, Square destination) {
-        if (type == PAWN) {
-            return color.pawnAttackAllowed(origin, destination);
-        } else {
-            return type.moveAllowed(origin, destination);
-        }
+    private boolean kingIsCheck() {
+        return board.pieces(color.opponent()).stream().anyMatch(Piece::check);
     }
 
-    public boolean canMoveOrAttack(Square origin, Predicate<Square> emptySquarePredicate, Predicate<Square> opponentSquarePredicate, Predicate<Square>
-            squareUnderAttackPredicate) {
-        if (type == PAWN) {
-            return color.pawnCanMove(origin, emptySquarePredicate) || color.pawnCanAttack(origin, opponentSquarePredicate);
-        } else {
-            return type.canMoveOrAttack(origin, emptySquarePredicate, opponentSquarePredicate, squareUnderAttackPredicate);
-        }
+    private boolean check() {
+        King opponentKing = board.kings.get(color.opponent());
+        return hasUnderAttack(opponentKing.position);
     }
 
-    public enum Type implements Movable {
-        KING {
+    private boolean hasUnderAttack(Square square) {
+        return onEmptyBoardCouldAttack(square) && pathEmptyTo(square);
+    }
+
+    private boolean pathEmptyTo(Square destination) {
+        return position.squaresInPathTo(destination).allMatch(square -> !board.pieceAt(square).isPresent());
+    }
+
+    private boolean mate() {
+        King opponentKing = board.kings.get(color.opponent());
+        return !opponentKing.canMove() && cannotBeAttackedAnotherPiece() && !opponentCanInterposePiece();
+    }
+
+    private boolean cannotBeAttackedAnotherPiece() {
+        return board.pieces(color.opponent()).stream().filter(piece -> piece.getType() != KING)
+                .allMatch(piece -> !piece.canAttack(this));
+    }
+
+    private boolean opponentCanInterposePiece() {
+        King opponentKing = board.kings.get(color.opponent());
+        return position.squaresInPathTo(opponentKing.position).anyMatch(
+                square -> board.pieces(color.opponent()).stream()
+                        .filter(piece -> opponentKing != piece)
+                        .anyMatch(piece -> piece.onEmptyBoardCouldMoveTo(square) && piece.pathEmptyTo(square)));
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s %s in %s", color, getType(), position);
+    }
+
+    public Memento memento() {
+        return new Memento() {
             @Override
-            public boolean moveAllowed(Square origin, Square destination) {
-                return origin.adjacentSquares().anyMatch(square -> square == destination);
+            public Square getPosition() {
+                return position;
             }
 
             @Override
-            public boolean canMoveOrAttack(Square origin, Predicate<Square> emptySquarePredicate, Predicate<Square> opponentSquarePredicate, Predicate<Square>
-                    squareUnderAttackPredicate) {
-                return firstSquaresToMoveOnFrom(origin).anyMatch(squareUnderAttackPredicate.negate().and(emptySquarePredicate.or(opponentSquarePredicate)));
+            public Color getColor() {
+                return color;
             }
 
             @Override
-            public Stream<Square> firstSquaresToMoveOnFrom(Square origin) {
-                return origin.adjacentSquares();
+            public Type getType() {
+                return Piece.this.getType();
             }
-        }, QUEEN {
-            @Override
-            public boolean moveAllowed(Square origin, Square destination) {
-                return ROOK.moveAllowed(origin, destination) || BISHOP.moveAllowed(origin, destination);
-            }
-
-            @Override
-            public Stream<Square> firstSquaresToMoveOnFrom(Square origin) {
-                return origin.adjacentSquares();
-            }
-        }, BISHOP {
-            @Override
-            public boolean moveAllowed(Square origin, Square destination) {
-                return origin != destination && origin.hasStraitDiagonalTo(destination);
-            }
-
-            @Override
-            public Stream<Square> firstSquaresToMoveOnFrom(Square origin) {
-                return origin.adjacentDiagonalSquares();
-            }
-        }, KNIGHT {
-            @Override
-            public boolean moveAllowed(Square origin, Square destination) {
-                return origin.fileDistanceTo(destination) + origin.rankDistanceTo(destination) == KNIGHT_MOVE_DISTANCE && !origin.hasStraitLineTo(destination);
-            }
-
-            @Override
-            public Stream<Square> firstSquaresToMoveOnFrom(Square origin) {
-                return origin.knightMoveSquares();
-            }
-        }, ROOK {
-            @Override
-            public boolean moveAllowed(Square origin, Square destination) {
-                return origin != destination && origin.hasStraitLineTo(destination);
-            }
-
-            @Override
-            public Stream<Square> firstSquaresToMoveOnFrom(Square origin) {
-                return origin.adjacentLineSquares();
-            }
-        }, PAWN {
-            @Override
-            public boolean moveAllowed(Square origin, Square destination) {
-                throw new UnsupportedOperationException("Pawns allowed moves depends on the color");
-            }
-
-            @Override
-            public Stream<Square> firstSquaresToMoveOnFrom(Square origin) {
-                throw new UnsupportedOperationException("Pawns allowed moves depends on the color");
-            }
-        }
+        };
     }
 
     public static enum Color {
-        WHITE(WHITE_FIRST_RANK, WHITE_PAWNS_STARTING_RANK), BLACK(BLACK_FIRST_RANK, BLACK_PAWNS_STARTING_RANK);
+        WHITE(WHITE_FIRST_RANK, WHITE_PAWN_RANK), BLACK(BLACK_FIRST_RANK, BLACK_PAWN_RANK);
 
         private final int firstRank;
         private final int pawnsStartingRank;
@@ -171,55 +174,55 @@ public class Piece {
             return pawnsStartingRank;
         }
 
-        private boolean pawnMoveAllowed(Square origin, Square destination) {
-            return destination.getFile() == origin.getFile() && movesForward(origin, destination) && pawnDistanceAllowed(origin, destination);
-        }
-
-        private boolean movesForward(Square origin, Square destination) {
-            return this == WHITE ^ destination.getRank() < origin.getRank();
-        }
-
-        private boolean pawnDistanceAllowed(Square origin, Square destination) {
-            int distance = Math.abs(destination.getRank() - origin.getRank());
-            return distance == 1 || distance == PAWN_SPECIAL_FIRST_MOVE_DISTANCE && !pawnAlreadyMoved(origin);
-        }
-
-        private boolean pawnAlreadyMoved(Square currentSquare) {
-            return pawnsStartingRank != currentSquare.getRank();
-        }
-
-        private boolean pawnAttackAllowed(Square origin, Square destination) {
-            return movesForward(origin, destination) && origin.fileDistanceTo(destination) == 1 && origin.rankDistanceTo(destination) == 1;
-        }
-
         public Color opponent() {
             return this == WHITE ? BLACK : WHITE;
         }
 
-        public boolean pawnCanMove(Square origin, Predicate<Square> emptySquarePredicate) {
-            int nextRank = this == WHITE ? origin.getRank() + 1 : origin.getRank() - 1;
-            return emptySquarePredicate.test(Square.SQUARES.get(origin.getFile(), nextRank));
-        }
+    }
 
-        // TODO "En passant" rule
-        public boolean pawnCanAttack(Square origin, Predicate<Square> opponentSquarePredicate) {
-            return origin.adjacentDiagonalSquares().anyMatch(square -> movesForward(origin, square) && opponentSquarePredicate.test(square));
+    public enum Type implements Factory {
+        KING {
+            @Override
+            public Piece createPiece(Color color, Board board, Square position) {
+                return new King(color, board, position);
+            }
+        }, QUEEN {
+            @Override
+            public Piece createPiece(Color color, Board board, Square position) {
+                return new Queen(color, board, position);
+            }
+        }, BISHOP {
+            @Override
+            public Piece createPiece(Color color, Board board, Square position) {
+                return new Bishop(color, board, position);
+            }
+        }, KNIGHT {
+            @Override
+            public Piece createPiece(Color color, Board board, Square position) {
+                return new Knight(color, board, position);
+            }
+        }, ROOK {
+            @Override
+            public Piece createPiece(Color color, Board board, Square position) {
+                return new Rook(color, board, position);
+            }
+        }, PAWN {
+            @Override
+            public Piece createPiece(Color color, Board board, Square position) {
+                return new Pawn(color, board, position);
+            }
         }
     }
 
-    private static interface Movable {
-        boolean moveAllowed(Square origin, Square destination);
+    public static interface Memento {
+        Square getPosition();
 
-        default boolean canMoveOrAttack(Square origin, Predicate<Square> emptySquarePredicate, Predicate<Square> opponentSquarePredicate, Predicate<Square>
-                squareUnderAttackPredicate) {
-            return firstSquaresToMoveOnFrom(origin).anyMatch(emptySquarePredicate.or(opponentSquarePredicate));
-        }
+        Color getColor();
 
-        Stream<Square> firstSquaresToMoveOnFrom(Square origin);
+        Type getType();
     }
 
-    @Override
-    public String toString() {
-        return color + " " + type;
+    public static interface Factory {
+        Piece createPiece(Color color, Board board, Square position);
     }
 }

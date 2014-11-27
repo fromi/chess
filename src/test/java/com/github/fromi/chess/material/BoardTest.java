@@ -1,26 +1,34 @@
 package com.github.fromi.chess.material;
 
 import static com.github.fromi.chess.material.Board.FILES;
+import static com.github.fromi.chess.material.IllegalMove.MoveRule.*;
 import static com.github.fromi.chess.material.Piece.Color.BLACK;
 import static com.github.fromi.chess.material.Piece.Type.PAWN;
+import static com.github.fromi.chess.material.util.Boards.createBoardMemento;
+import static com.github.fromi.chess.material.util.IllegalMoveMatcher.illegalMoveBecause;
 import static com.github.fromi.chess.material.util.Pieces.*;
 import static com.github.fromi.chess.material.util.Squares.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.rules.ExpectedException.none;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.github.fromi.chess.material.util.Pieces;
 import com.google.common.eventbus.EventBus;
 
+@SuppressWarnings("JavacQuirks")
 @RunWith(MockitoJUnitRunner.class)
 public class BoardTest {
 
@@ -36,6 +44,9 @@ public class BoardTest {
     PieceCaptured pieceCaptured;
     private final ArgumentCaptor<PieceCaptured.Event> pieceCapturedEventArgumentCaptor = forClass(PieceCaptured.Event.class);
 
+    @Rule
+    public final ExpectedException exception = none();
+
     @Before
     public void setUp() {
         board = new Board(eventBus);
@@ -45,180 +56,211 @@ public class BoardTest {
 
     @Test
     public void verify_setup() {
-        Piece[] rank8 = {r, n, b, q, k, b, n, r};
-        Piece[] rank7 = {p, p, p, p, p, p, p, p};
-        Piece[] rank6 = {O, O, O, O, O, O, O, O};
-        Piece[] rank5 = {O, O, O, O, O, O, O, O};
-        Piece[] rank4 = {O, O, O, O, O, O, O, O};
-        Piece[] rank3 = {O, O, O, O, O, O, O, O};
-        Piece[] rank2 = {P, P, P, P, P, P, P, P};
-        Piece[] rank1 = {R, N, B, Q, K, B, N, R};
-        Piece[][] expectedBoard = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        for (int rankNumber = 0; rankNumber < 8 ; rankNumber++) {
-            for (int fileNumber = 0; fileNumber < 8 ; fileNumber++) {
-                assertThat(board.memento().get(FILES.get(fileNumber), rankNumber + 1), equalTo(expectedBoard[rankNumber][fileNumber]));
-            }
-        }
+        Pieces.Piece[] rank8 = {r, n, b, q, k, b, n, r};
+        Pieces.Piece[] rank7 = {p, p, p, p, p, p, p, p};
+        Pieces.Piece[] rank6 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {P, P, P, P, P, P, P, P};
+        Pieces.Piece[] rank1 = {R, N, B, Q, K, B, N, R};
+        Pieces.Piece[][] expectedBoard = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        board.memento().getPieces().forEachRemaining(piece -> {
+            Pieces.Piece expected = expectedBoard[piece.getPosition().getRank() - 1][FILES.indexOf(piece.getPosition().getFile())];
+            assertThat(piece.getColor(), equalTo(expected.getColor()));
+            assertThat(piece.getType(), equalTo(expected.getType()));
+        });
     }
 
     @Test
     public void move_piece() {
-        board.movePiece(E2, E4);
+        board.pieceAt(E2).ifPresent(piece -> piece.moveTo(E4));
         verify(pieceMove).handle(pieceMoveEventArgumentCaptor.capture());
     }
 
     @Test
     public void move_piece_twice() {
-        board.movePiece(E2, E4);
-        board.movePiece(E4, E5);
+        Piece piece = board.pieceAt(E2).get();
+        piece.moveTo(E4);
+        piece.moveTo(E5);
         verify(pieceMove, times(2)).handle(pieceMoveEventArgumentCaptor.capture());
     }
 
-    @Test(expected = SquareEmpty.class)
+    @Test
     public void after_move_origin_is_empty() {
-        board.movePiece(E2, E4);
-        board.getPieceAt(E2);
+        board.pieceAt(E2).ifPresent(piece -> piece.moveTo(E4));
+        assertFalse(board.pieceAt(E2).isPresent());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void destination_must_differ_from_origin() {
-        board.movePiece(E2, E2);
+        board.pieceAt(E2).ifPresent(piece -> piece.moveTo(E2));
     }
 
-    @Test(expected = PieceCannotMoveThisWay.class)
+    @Test
     public void pieces_cannot_move_anywhere() {
-        board.movePiece(E2, F3);
+        exception.expect(illegalMoveBecause(CANNOT_MOVE_THIS_WAY));
+        board.pieceAt(E2).ifPresent(piece -> piece.moveTo(F3));
     }
 
-    @Test(expected = CannotLandOnFriend.class)
+    @Test
     public void pieces_cannot_land_on_friends() {
-        board.movePiece(A1, A2);
+        exception.expect(illegalMoveBecause(CANNOT_MOVE_ON_FRIEND));
+        board.pieceAt(A1).ifPresent(piece -> piece.moveTo(A2));
     }
 
-    @Test(expected = CannotGoThroughAnotherPiece.class)
+    @Test
     public void rook_cannot_jump() {
-        board.movePiece(A8, A6);
+        exception.expect(illegalMoveBecause(CANNOT_GO_THROUGH_ANOTHER_PIECE));
+        board.pieceAt(A8).ifPresent(piece -> piece.moveTo(A6));
+    }
+
+    @Test
+    public void cannot_attack_through_another_piece() {
+        exception.expect(illegalMoveBecause(CANNOT_GO_THROUGH_ANOTHER_PIECE));
+        board.pieceAt(A8).ifPresent(piece -> piece.moveTo(A1));
     }
 
     @Test
     public void knight_can_jump() {
-        board.movePiece(B1, C3);
+        board.pieceAt(B1).ifPresent(piece -> piece.moveTo(C3));
     }
 
     @Test
     public void capture() {
-        board.movePiece(E2, E4);
-        board.movePiece(F7, F5);
-        board.movePiece(E4, F5);
+        board.pieceAt(E2).ifPresent(piece -> piece.moveTo(E4));
+        board.pieceAt(F7).ifPresent(piece -> piece.moveTo(F5));
+        board.pieceAt(E4).ifPresent(piece -> piece.moveTo(F5));
         verify(pieceCaptured).handle(pieceCapturedEventArgumentCaptor.capture());
         PieceCaptured.Event event = pieceCapturedEventArgumentCaptor.getValue();
-        assertThat(event.getPiece(), equalTo(Piece.PIECES.get(BLACK, PAWN)));
+        assertThat(event.getPieceColor(), equalTo(BLACK));
+        assertThat(event.getPieceType(), equalTo(PAWN));
         assertThat(event.getPosition(), equalTo(F5));
     }
 
-    @Test(expected = CannotAttackThisWay.class)
+    @Test
     public void pawn_cannot_attack_in_front() {
-        board.movePiece(E2, E4);
-        board.movePiece(E7, E5);
-        board.movePiece(E4, E5);
+        exception.expect(illegalMoveBecause(CANNOT_ATTACK_THIS_WAY));
+        board.pieceAt(E2).ifPresent(piece -> piece.moveTo(E4));
+        board.pieceAt(E7).ifPresent(piece -> piece.moveTo(E5));
+        board.pieceAt(E4).ifPresent(piece -> piece.moveTo(E5));
     }
 
     @Test
     public void queen_capture_and_captured() {
-        board.movePiece(E2, E4);
-        board.movePiece(H7, H5);
-        board.movePiece(D1, H5);
-        board.movePiece(H8, H5);
+        board.pieceAt(E2).ifPresent(piece -> piece.moveTo(E4));
+        board.pieceAt(H7).ifPresent(piece -> piece.moveTo(H5));
+        board.pieceAt(D1).ifPresent(piece -> piece.moveTo(H5));
+        board.pieceAt(H8).ifPresent(piece -> piece.moveTo(H5));
         verify(pieceCaptured, times(2)).handle(pieceCapturedEventArgumentCaptor.capture());
     }
 
-    @Test(expected = CannotBeInCheckAfterMove.class)
+    @Test
     public void king_cannot_be_in_check_after_his_move() {
-        Piece[] rank8 = {O, O, O, k, O, O, O, O};
-        Piece[] rank7 = {O, O, O, O, O, O, O, O};
-        Piece[] rank6 = {O, O, O, O, O, O, O, O};
-        Piece[] rank5 = {O, O, O, O, O, O, O, O};
-        Piece[] rank4 = {O, O, O, O, O, O, O, O};
-        Piece[] rank3 = {O, O, O, O, O, O, O, O};
-        Piece[] rank2 = {O, O, O, O, O, O, O, O};
-        Piece[] rank1 = {O, O, O, O, Q, O, O, O};
-        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
-        board.movePiece(D8, E7);
+        exception.expect(illegalMoveBecause(KING_MUST_NOT_BE_IN_CHECK));
+        Pieces.Piece[] rank8 = {_, _, _, k, _, _, _, _};
+        Pieces.Piece[] rank7 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank6 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank1 = {_, _, _, _, Q, _, _, _};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board(createBoardMemento(pieces), eventBus);
+        board.pieceAt(D8).ifPresent(piece -> piece.moveTo(E7));
     }
 
-    @Test(expected = CannotBeInCheckAfterMove.class)
+    @Test
     public void king_cannot_be_in_check_after_any_move() {
-        Piece[] rank8 = {O, O, O, q, O, O, O, O};
-        Piece[] rank7 = {O, O, O, O, O, O, O, O};
-        Piece[] rank6 = {O, O, O, O, O, O, O, O};
-        Piece[] rank5 = {O, O, O, O, O, O, O, O};
-        Piece[] rank4 = {O, O, O, O, O, O, O, O};
-        Piece[] rank3 = {O, O, O, O, O, O, O, O};
-        Piece[] rank2 = {O, O, O, N, O, O, O, O};
-        Piece[] rank1 = {O, O, O, K, O, O, O, O};
-        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
-        board.movePiece(D2, E4);
+        exception.expect(illegalMoveBecause(KING_MUST_NOT_BE_IN_CHECK));
+        Pieces.Piece[] rank8 = {_, _, _, q, k, _, _, _};
+        Pieces.Piece[] rank7 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank6 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {_, _, _, N, _, _, _, _};
+        Pieces.Piece[] rank1 = {_, _, _, K, _, _, _, _};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board(createBoardMemento(pieces), eventBus);
+        board.pieceAt(D2).ifPresent(piece -> piece.moveTo(E4));
     }
 
-    @Test(expected = CannotBeInCheckAfterMove.class)
+    @Test
     public void king_cannot_be_in_check_even_after_attack() {
-        Piece[] rank8 = {O, k, O, O, O, O, O, O};
-        Piece[] rank7 = {O, P, O, O, O, O, O, O};
-        Piece[] rank6 = {O, O, K, O, O, O, O, O};
-        Piece[] rank5 = {O, O, O, O, O, O, O, O};
-        Piece[] rank4 = {O, O, O, O, O, O, O, O};
-        Piece[] rank3 = {O, O, O, O, O, O, O, O};
-        Piece[] rank2 = {O, O, O, O, O, O, O, O};
-        Piece[] rank1 = {O, O, O, O, O, O, O, O};
-        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
-        board.movePiece(B8, B7);
+        exception.expect(illegalMoveBecause(KING_MUST_NOT_BE_IN_CHECK));
+        Pieces.Piece[] rank8 = {_, k, _, _, _, _, _, _};
+        Pieces.Piece[] rank7 = {_, P, _, _, _, _, _, _};
+        Pieces.Piece[] rank6 = {_, _, K, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank1 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board(createBoardMemento(pieces), eventBus);
+        board.pieceAt(B8).ifPresent(piece -> piece.moveTo(B7));
     }
 
-    @Test(expected = CannotBeInCheckAfterMove.class)
+    @Test
     public void when_in_check_you_must_protect_the_king() {
-        Piece[] rank8 = {O, O, O, q, k, O, O, O};
-        Piece[] rank7 = {O, O, O, O, O, O, O, O};
-        Piece[] rank6 = {O, O, O, O, O, O, O, O};
-        Piece[] rank5 = {O, O, O, O, O, O, O, O};
-        Piece[] rank4 = {O, O, O, O, O, O, O, O};
-        Piece[] rank3 = {O, O, O, O, O, O, O, O};
-        Piece[] rank2 = {O, O, O, O, O, O, O, O};
-        Piece[] rank1 = {O, O, O, O, Q, K, O, O};
-        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
-        board.movePiece(D8, F6);
+        exception.expect(illegalMoveBecause(KING_MUST_NOT_BE_IN_CHECK));
+        Pieces.Piece[] rank8 = {_, _, _, q, k, _, _, _};
+        Pieces.Piece[] rank7 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank6 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank1 = {_, _, _, _, Q, K, _, _};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board(createBoardMemento(pieces), eventBus);
+        board.pieceAt(D8).ifPresent(piece -> piece.moveTo(F6));
     }
 
     @Test
     public void defend_check_by_removing_attacker() {
-        Piece[] rank8 = {r, n, b, q, k, b, n, r};
-        Piece[] rank7 = {p, p, p, p, p, p, p, p};
-        Piece[] rank6 = {O, O, O, N, O, O, O, O};
-        Piece[] rank5 = {O, O, O, O, O, O, O, O};
-        Piece[] rank4 = {O, O, O, O, O, O, O, O};
-        Piece[] rank3 = {O, O, O, O, O, O, O, O};
-        Piece[] rank2 = {P, P, P, P, P, P, P, P};
-        Piece[] rank1 = {R, N, B, Q, K, B, O, R};
-        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
-        assertFalse(board.checkMate(D6));
+        Pieces.Piece[] rank8 = {r, n, b, q, k, b, n, r};
+        Pieces.Piece[] rank7 = {p, p, p, p, p, p, p, p};
+        Pieces.Piece[] rank6 = {_, _, _, N, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {P, P, P, P, P, P, P, P};
+        Pieces.Piece[] rank1 = {R, N, B, Q, K, B, _, R};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board(createBoardMemento(pieces), eventBus);
+        assertFalse(board.pieceAt(D6).get().checkMate());
     }
 
     @Test
     public void defend_check_by_interposition() {
-        Piece[] rank8 = {r, n, b, q, k, b, n, r};
-        Piece[] rank7 = {p, p, p, p, p, O, p, p};
-        Piece[] rank6 = {O, O, O, O, O, p, O, O};
-        Piece[] rank5 = {O, O, O, O, O, O, O, Q};
-        Piece[] rank4 = {O, O, O, O, O, O, O, O};
-        Piece[] rank3 = {O, O, O, O, P, O, O, O};
-        Piece[] rank2 = {P, P, P, P, O, P, P, P};
-        Piece[] rank1 = {R, N, B, O, K, B, N, R};
-        Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board((file, rank) -> pieces[rank-1][FILES.indexOf(file)], eventBus);
-        assertFalse(board.checkMate(H5));
+        Pieces.Piece[] rank8 = {r, n, b, q, k, b, n, r};
+        Pieces.Piece[] rank7 = {p, p, p, p, p, _, p, p};
+        Pieces.Piece[] rank6 = {_, _, _, _, _, p, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, _, _, _, Q};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, P, _, _, _};
+        Pieces.Piece[] rank2 = {P, P, P, P, _, P, P, P};
+        Pieces.Piece[] rank1 = {R, N, B, _, K, B, N, R};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board(createBoardMemento(pieces), eventBus);
+        assertFalse(board.pieceAt(H5).get().checkMate());
+    }
+
+    @Test
+    public void stalemate_by_piece_interposition() {
+        Pieces.Piece[] rank8 = {k, _, K, _, _, _, _, _};
+        Pieces.Piece[] rank7 = {_, p, _, _, _, _, _, _};
+        Pieces.Piece[] rank6 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, _, B, Q, _, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[] rank1 = {_, _, _, _, _, _, _, _};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Board board = new Board(createBoardMemento(pieces), eventBus);
+        assertFalse(board.pieceAt(B7).get().canMove());
     }
 }

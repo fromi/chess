@@ -1,7 +1,5 @@
 package com.github.fromi.chess.material;
 
-import static com.github.fromi.chess.material.Board.FILES;
-import static com.github.fromi.chess.material.Board.SIZE;
 import static java.lang.Math.*;
 import static java.util.stream.IntStream.range;
 
@@ -18,8 +16,8 @@ public class Square {
     static {
         ImmutableTable.Builder<Character, Integer, Square> squaresBuilder = new ImmutableTable.Builder<>();
         range(0, Board.SIZE).forEach(
-                fileNumber -> range(0, Board.SIZE).forEach(
-                        rankNumber -> squaresBuilder.put(FILES.get(fileNumber), rankNumber + 1, new Square(fileNumber, rankNumber))));
+                column -> range(0, Board.SIZE).forEach(
+                        row -> squaresBuilder.put(Board.FILES.get(column), Board.RANKS.get(row), new Square(column, row))));
         SQUARES = squaresBuilder.build();
     }
 
@@ -30,24 +28,24 @@ public class Square {
             Arrays.stream(ADJACENT_LINE_SQUARES_DELTA)).toArray(int[][]::new);
     private static final int[][] KNIGHT_MOVES_DELTA = {{-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {-2, 1}, {-2, -1}, {2, -1}, {2, 1}};
 
-    private final int fileNumber;
-    private final int rankNumber;
+    private final int column;
+    private final int row;
 
-    private Square(int fileNumber, int rankNumber) {
-        this.fileNumber = fileNumber;
-        this.rankNumber = rankNumber;
+    private Square(int column, int row) {
+        this.column = column;
+        this.row = row;
     }
 
     public char getFile() {
-        return FILES.get(fileNumber);
+        return Board.FILES.get(column);
     }
 
     public int getRank() {
-        return rankNumber + 1;
+        return Board.RANKS.get(row);
     }
 
     public boolean hasStraitLineTo(Square destination) {
-        return fileNumber == destination.fileNumber || rankNumber == destination.rankNumber;
+        return column == destination.column || row == destination.row;
     }
 
     public boolean hasStraitDiagonalTo(Square destination) {
@@ -55,26 +53,22 @@ public class Square {
     }
 
     public int fileDistanceTo(Square destination) {
-        return abs(fileNumber - destination.fileNumber);
+        return abs(column - destination.column);
     }
 
     public int rankDistanceTo(Square destination) {
-        return abs(rankNumber - destination.rankNumber);
+        return abs(row - destination.row);
     }
 
-    public Stream<Square> squaresInBetween(Square destination) {
-        if (fileNumber == destination.fileNumber) {
-            return fileSquaresBetween(min(rankNumber, destination.rankNumber), max(rankNumber, destination.rankNumber));
-        } else if (rankNumber == destination.rankNumber) {
-            return rankSquaresBetween(min(fileNumber, destination.fileNumber), max(fileNumber, destination.fileNumber));
+    public Stream<Square> squaresInPathTo(Square destination) {
+        if (column == destination.column) {
+            return fileSquaresBetween(min(row, destination.row), max(row, destination.row));
+        } else if (row == destination.row) {
+            return rankSquaresBetween(min(column, destination.column), max(column, destination.column));
         } else if (hasStraitDiagonalTo(destination)) {
-            int distance = destination.fileNumber - fileNumber;
-            return range(min(rankNumber, destination.rankNumber) + 1, max(rankNumber, destination.rankNumber)).boxed()
-                    .map(currentRankNumber -> SQUARES.get(
-                            FILES.get(fileNumber + abs(currentRankNumber - rankNumber) * distance / abs(distance)),
-                            currentRankNumber + 1));
+            return diagonalSquaresBetweenThisAnd(destination);
         } else {
-            throw new IllegalArgumentException();
+            return Stream.empty();
         }
     }
 
@@ -85,7 +79,15 @@ public class Square {
 
     private Stream<Square> rankSquaresBetween(int min, int max) {
         return range(min + 1, max).boxed()
-                .map(fileNumber -> SQUARES.get(FILES.get(fileNumber), rankNumber + 1));
+                .map(fileNumber -> SQUARES.get(Board.FILES.get(fileNumber), row + 1));
+    }
+
+    private Stream<Square> diagonalSquaresBetweenThisAnd(Square destination) {
+        int distance = destination.column - column;
+        return range(min(row, destination.row) + 1, max(row, destination.row)).boxed()
+                .map(currentRankNumber -> SQUARES.get(
+                        Board.FILES.get(column + abs(currentRankNumber - row) * distance / abs(distance)),
+                        currentRankNumber + 1));
     }
 
     public Stream<Square> adjacentSquares() {
@@ -106,11 +108,11 @@ public class Square {
 
     private Stream<Square> deltasToSquares(int[][] squaresDeltas) {
         return Arrays.stream(squaresDeltas)
-                .filter(deltas -> fileNumber + deltas[0] >= 0)
-                .filter(deltas -> fileNumber + deltas[0] < SIZE)
-                .filter(deltas -> rankNumber + deltas[1] >= 0)
-                .filter(deltas -> rankNumber + deltas[1] < SIZE)
-                .map((int[] deltas) -> SQUARES.get(FILES.get(fileNumber + deltas[0]), rankNumber + 1 + deltas[1]));
+                .filter(deltas -> column + deltas[0] >= 0)
+                .filter(deltas -> column + deltas[0] < Board.SIZE)
+                .filter(deltas -> row + deltas[1] >= 0)
+                .filter(deltas -> row + deltas[1] < Board.SIZE)
+                .map((int[] deltas) -> SQUARES.get(Board.FILES.get(column + deltas[0]), row + 1 + deltas[1]));
     }
 
     @Override

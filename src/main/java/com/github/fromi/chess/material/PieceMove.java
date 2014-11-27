@@ -8,18 +8,24 @@ public interface PieceMove {
     public void handle(Event event);
 
     public class Event {
-        private final Piece piece;
+        private final Piece.Color pieceColor;
+        private final Piece.Type pieceType;
         private final Square origin;
         private final Square destination;
 
-        public Event(Piece piece, Square origin, Square destination) {
-            this.piece = piece;
+        public Event(Piece.Color pieceColor, Piece.Type pieceType, Square origin, Square destination) {
+            this.pieceColor = pieceColor;
+            this.pieceType = pieceType;
             this.origin = origin;
             this.destination = destination;
         }
 
-        public Piece getPiece() {
-            return piece;
+        public Piece.Color getPieceColor() {
+            return pieceColor;
+        }
+
+        public Piece.Type getPieceType() {
+            return pieceType;
         }
 
         public Square getOrigin() {

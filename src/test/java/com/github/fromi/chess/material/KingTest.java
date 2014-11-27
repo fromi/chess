@@ -1,59 +1,53 @@
 package com.github.fromi.chess.material;
 
-import static com.github.fromi.chess.material.Piece.Type.KING;
-import static com.github.fromi.chess.material.Square.SQUARES;
+import static com.github.fromi.chess.material.Piece.Color.WHITE;
 import static com.github.fromi.chess.material.util.Squares.B8;
 import static com.github.fromi.chess.material.util.Squares.D4;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
 
+import org.junit.Rule;
 import org.junit.Test;
 
+import com.github.fromi.chess.material.util.Boards;
+
+@SuppressWarnings("JavacQuirks")
 public class KingTest {
-    // Queen position
-    private static final Boolean N = false;
-    // Invalid moves
+    // King position
     private static final Boolean O = false;
+    // Invalid moves
+    private static final Boolean _ = false;
     // Valid moves
     private static final Boolean X = true;
 
+    @Rule
+    public final MoveRule moveRule = new MoveRule();
+
     @Test
     public void king_moves_from_D4() {
-        Boolean[] rank8 = {O, O, O, O, O, O, O, O};
-        Boolean[] rank7 = {O, O, O, O, O, O, O, O};
-        Boolean[] rank6 = {O, O, O, O, O, O, O, O};
-        Boolean[] rank5 = {O, O, X, X, X, O, O, O};
-        Boolean[] rank4 = {O, O, X, N, X, O, O, O};
-        Boolean[] rank3 = {O, O, X, X, X, O, O, O};
-        Boolean[] rank2 = {O, O, O, O, O, O, O, O};
-        Boolean[] rank1 = {O, O, O, O, O, O, O, O};
-        Boolean[][] board = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        for (int fileNumber = 0 ; fileNumber < Board.SIZE ; fileNumber++) {
-            for (int rankNumber = 0 ; rankNumber < Board.SIZE ; rankNumber++) {
-                Square destination = SQUARES.get(Board.FILES.get(fileNumber), rankNumber + 1);
-                if (destination.equals(D4)) continue;
-                assertThat(KING.moveAllowed(D4, destination), equalTo(board[rankNumber][fileNumber]));
-            }
-        }
+        King king = new King(WHITE, Boards.empty(), D4);
+        Boolean[] rank8 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank7 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank6 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank5 = {_, _, X, X, X, _, _, _};
+        Boolean[] rank4 = {_, _, X, O, X, _, _, _};
+        Boolean[] rank3 = {_, _, X, X, X, _, _, _};
+        Boolean[] rank2 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank1 = {_, _, _, _, _, _, _, _};
+        Boolean[][] validMoves = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        moveRule.with(king).expect(validMoves);
     }
 
     @Test
     public void king_moves_from_B8() {
-        Boolean[] rank8 = {X, N, X, O, O, O, O, O};
-        Boolean[] rank7 = {X, X, X, O, O, O, O, O};
-        Boolean[] rank6 = {O, O, O, O, O, O, O, O};
-        Boolean[] rank5 = {O, O, O, O, O, O, O, O};
-        Boolean[] rank4 = {O, O, O, O, O, O, O, O};
-        Boolean[] rank3 = {O, O, O, O, O, O, O, O};
-        Boolean[] rank2 = {O, O, O, O, O, O, O, O};
-        Boolean[] rank1 = {O, O, O, O, O, O, O, O};
-        Boolean[][] board = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        for (int fileNumber = 0 ; fileNumber < Board.SIZE ; fileNumber++) {
-            for (int rankNumber = 0 ; rankNumber < Board.SIZE ; rankNumber++) {
-                Square destination = SQUARES.get(Board.FILES.get(fileNumber), rankNumber + 1);
-                if (destination.equals(B8)) continue;
-                assertThat(KING.moveAllowed(B8, destination), equalTo(board[rankNumber][fileNumber]));
-            }
-        }
+        King king = new King(WHITE, Boards.empty(), B8);
+        Boolean[] rank8 = {X, O, X, _, _, _, _, _};
+        Boolean[] rank7 = {X, X, X, _, _, _, _, _};
+        Boolean[] rank6 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank5 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank4 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank3 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank2 = {_, _, _, _, _, _, _, _};
+        Boolean[] rank1 = {_, _, _, _, _, _, _, _};
+        Boolean[][] validMoves = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        moveRule.with(king).expect(validMoves);
     }
 }
