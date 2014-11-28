@@ -15,9 +15,17 @@ import com.google.common.collect.ImmutableMap;
 
 public class GameMemento implements Game.Memento {
     private final Board.Memento board;
+    private final Player.State whiteState;
+    private final Player.State blackState;
 
     public GameMemento(Board.Memento board) {
+        this(board, WHITE);
+    }
+
+    public GameMemento(Board.Memento board, Piece.Color activePlayer) {
         this.board = board;
+        whiteState = activePlayer == WHITE ? PLAYING : WAITING;
+        blackState = activePlayer == BLACK ? PLAYING : WAITING;
     }
 
     @Override
@@ -27,6 +35,6 @@ public class GameMemento implements Game.Memento {
 
     @Override
     public Map<Piece.Color, Player.State> getPlayersStates() {
-        return ImmutableMap.of(WHITE, PLAYING, BLACK, WAITING);
+        return ImmutableMap.of(WHITE, whiteState, BLACK, blackState);
     }
 }

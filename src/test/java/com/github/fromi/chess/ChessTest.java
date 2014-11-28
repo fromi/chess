@@ -219,4 +219,38 @@ public class ChessTest {
         game.player(WHITE).move(D7, D8);
         game.player(WHITE).move(E7, E8);
     }
+
+    @Test
+    public void castling_on_king_side() {
+        Pieces.Piece[] rank8 = {r, _, b, q, k, b, n, r};
+        Pieces.Piece[] rank7 = {p, _, p, p, _, p, p, p};
+        Pieces.Piece[] rank6 = {_, _, n, _, _, _, _, _};
+        Pieces.Piece[] rank5 = {_, p, _, _, p, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, _, _, P, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, _, B, _, N, _, _};
+        Pieces.Piece[] rank2 = {P, P, P, P, _, P, P, P};
+        Pieces.Piece[] rank1 = {R, N, B, Q, K, _, _, R};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Game game = new Game(new GameMemento(createBoardMemento(pieces)));
+        game.register(pieceMove);
+        game.player(WHITE).move(E1, G1);
+        verify(pieceMove, times(2)).handle(pieceMoveEventArgumentCaptor.capture());
+    }
+
+    @Test
+    public void castling_on_queen_side() {
+        Pieces.Piece[] rank8 = {r, _, _, _, k, b, _, r};
+        Pieces.Piece[] rank7 = {p, _, _, _, _, _, p, p};
+        Pieces.Piece[] rank6 = {_, _, p, _, b, p, _, _};
+        Pieces.Piece[] rank5 = {_, _, _, _, p, _, _, _};
+        Pieces.Piece[] rank4 = {_, _, P, _, _, _, _, _};
+        Pieces.Piece[] rank3 = {_, _, P, _, _, _, _, _};
+        Pieces.Piece[] rank2 = {P, _, _, K, P, P, _, P};
+        Pieces.Piece[] rank1 = {_, R, B, _, K, _, _, R};
+        Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+        Game game = new Game(new GameMemento(createBoardMemento(pieces), BLACK));
+        game.register(pieceMove);
+        game.player(BLACK).move(E8, C8);
+        verify(pieceMove, times(2)).handle(pieceMoveEventArgumentCaptor.capture());
+    }
 }

@@ -29,9 +29,8 @@ public abstract class Piece {
         if (!canMoveTo(destination)) {
             throw new IllegalMove(this, board, destination);
         }
-        board.eventBus.post(new PieceMove.Event(color, getType(), position, destination));
+        definitelyMoveTo(destination);
         board.pieceAt(destination).ifPresent(piece -> board.eventBus.post(new PieceCaptured.Event(piece.color, piece.getType(), destination)));
-        doMoveTo(destination);
     }
 
     public boolean canMove() {
@@ -69,8 +68,14 @@ public abstract class Piece {
         return onEmptyBoardCouldAttack(destination) && pathEmptyTo(destination) && myKingWillNotBeCheckIfIMoveTo(destination);
     }
 
-    private boolean canMoveToEmpty(Square destination) {
+    protected boolean canMoveToEmpty(Square destination) {
         return onEmptyBoardCouldMoveTo(destination) && pathEmptyTo(destination) && myKingWillNotBeCheckIfIMoveTo(destination);
+    }
+
+    protected void definitelyMoveTo(Square destination) {
+        Square origin = position;
+        doMoveTo(destination);
+        board.eventBus.post(new PieceMove.Event(color, getType(), origin, destination));
     }
 
     private void doMoveTo(Square destination) {
@@ -96,7 +101,7 @@ public abstract class Piece {
         }
     }
 
-    private boolean kingIsCheck() {
+    protected boolean kingIsCheck() {
         return board.pieces(color.opponent()).stream().anyMatch(Piece::check);
     }
 
@@ -105,11 +110,11 @@ public abstract class Piece {
         return hasUnderAttack(opponentKing.position);
     }
 
-    private boolean hasUnderAttack(Square square) {
+    protected boolean hasUnderAttack(Square square) {
         return onEmptyBoardCouldAttack(square) && pathEmptyTo(square);
     }
 
-    private boolean pathEmptyTo(Square destination) {
+    protected boolean pathEmptyTo(Square destination) {
         return position.squaresInPathTo(destination).allMatch(square -> !board.pieceAt(square).isPresent());
     }
 
@@ -153,6 +158,10 @@ public abstract class Piece {
                 return Piece.this.getType();
             }
         };
+    }
+
+    protected boolean hasNeverMoved() {
+        return true; // TODO moves record
     }
 
     public static enum Color {

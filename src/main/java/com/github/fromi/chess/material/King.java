@@ -1,5 +1,6 @@
 package com.github.fromi.chess.material;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class King extends Piece {
@@ -12,6 +13,15 @@ public class King extends Piece {
 
     public King(Color color, Board board, Square position) {
         super(color, board, position);
+    }
+
+    @Override
+    public void moveTo(Square destination) {
+        if (position.equals(startingPosition()) && isCastlingMoveTo(destination)) {
+            castleTo(destination);
+        } else {
+            super.moveTo(destination);
+        }
     }
 
     @Override
@@ -29,4 +39,70 @@ public class King extends Piece {
         return position.adjacentSquares();
     }
 
+
+    private Square startingPosition() {
+        return Square.SQUARES.get(STARTING_FILE, color.getFirstRank());
+    }
+
+    private boolean isCastlingMoveTo(Square destination) {
+        return position.fileDistanceTo(destination) == 2 && position.rankDistanceTo(destination) == 0;
+    }
+
+    private void castleTo(Square destination) {
+        if (!canCastleTo(destination)) {
+            throw new IllegalCastling(this, board, destination);
+        }
+        Optional<Piece> expectedRook = rookCastlingWithWhenMovingTo(destination);
+        if (!expectedRook.isPresent() || !canCastleWith(expectedRook.get())) {
+            throw new IllegalCastling(this, board, destination);
+        }
+        Square rookDestination = position.squaresInPathTo(destination).findFirst().get();
+        definitelyMoveTo(destination);
+        expectedRook.get().definitelyMoveTo(rookDestination);
+    }
+
+    private boolean canCastleTo(Square destination) {
+        return hasNeverMoved()
+                && !kingIsCheck()
+                && !castlingThroughCheck(destination)
+                && !opponentCanAttack(destination);
+    }
+
+    private boolean castlingThroughCheck(Square destination) {
+        return position.squaresInPathTo(destination).anyMatch(this::opponentCanAttack);
+    }
+
+    private boolean opponentCanAttack(Square square) {
+        return board.pieces(color.opponent()).stream().anyMatch(piece -> piece.hasUnderAttack(square));
+    }
+
+    private Optional<Piece> rookCastlingWithWhenMovingTo(Square destination) {
+        if (destination == queenSideCastlingDestination()) {
+            return board.pieceAt(queenSideRookPosition());
+        } else if (destination == kingSideCastlingDestination()) {
+            return board.pieceAt(kingSideRookPosition());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private Square queenSideCastlingDestination() {
+        return Square.SQUARES.get('c', color.getFirstRank());
+    }
+
+    private Square queenSideRookPosition() {
+        return Square.SQUARES.get('a', color.getFirstRank());
+    }
+
+    private Square kingSideCastlingDestination() {
+        return Square.SQUARES.get('g', color.getFirstRank());
+    }
+
+    private Square kingSideRookPosition() {
+        return Square.SQUARES.get('h', color.getFirstRank());
+    }
+
+    private boolean canCastleWith(Piece rook) {
+        return rook.hasNeverMoved() && pathEmptyTo(rook.position);
+    }
 }
