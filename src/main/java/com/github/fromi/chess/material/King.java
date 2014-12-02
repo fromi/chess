@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 public class King extends Piece {
 
     static final Character STARTING_FILE = 'e';
+    private static final int CASTLING_MOVE_DISTANCE = 2;
 
     public King(Color color, Board board) {
         super(color, board, Square.SQUARES.get(STARTING_FILE, color.getFirstRank()));
@@ -45,7 +46,7 @@ public class King extends Piece {
     }
 
     private boolean isCastlingMoveTo(Square destination) {
-        return position.fileDistanceTo(destination) == 2 && position.rankDistanceTo(destination) == 0;
+        return position.fileDistanceTo(destination) == CASTLING_MOVE_DISTANCE && position.rankDistanceTo(destination) == 0;
     }
 
     private void castleTo(Square destination) {
@@ -62,8 +63,8 @@ public class King extends Piece {
     }
 
     private boolean canCastleTo(Square destination) {
-        return hasNeverMoved()
-                && !kingIsCheck()
+        return neverMoved()
+                && kingIsSafe()
                 && !castlingThroughCheck(destination)
                 && !opponentCanAttack(destination);
     }
@@ -103,6 +104,6 @@ public class King extends Piece {
     }
 
     private boolean canCastleWith(Piece rook) {
-        return rook.hasNeverMoved() && pathEmptyTo(rook.position);
+        return rook.neverMoved() && pathEmptyTo(rook.position);
     }
 }

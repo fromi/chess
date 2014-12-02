@@ -37,6 +37,9 @@ public class BoardTest {
     private final EventBus eventBus = new EventBus();
 
     @Mock
+    MovesRecord movesRecord;
+
+    @Mock
     PieceMove pieceMove;
     private final ArgumentCaptor<PieceMove.Event> pieceMoveEventArgumentCaptor = forClass(PieceMove.Event.class);
 
@@ -49,7 +52,7 @@ public class BoardTest {
 
     @Before
     public void setUp() {
-        board = new Board(eventBus);
+        board = new Board(eventBus, movesRecord);
         eventBus.register(pieceMove);
         eventBus.register(pieceCaptured);
     }
@@ -65,7 +68,7 @@ public class BoardTest {
         Pieces.Piece[] rank2 = {P, P, P, P, P, P, P, P};
         Pieces.Piece[] rank1 = {R, N, B, Q, K, B, N, R};
         Pieces.Piece[][] expectedBoard = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        board.memento().getPieces().forEachRemaining(piece -> {
+        board.data().getPieces().forEachRemaining(piece -> {
             Pieces.Piece expected = expectedBoard[piece.getPosition().getRank() - 1][FILES.indexOf(piece.getPosition().getFile())];
             assertThat(piece.getColor(), equalTo(expected.getColor()));
             assertThat(piece.getType(), equalTo(expected.getType()));
@@ -167,7 +170,7 @@ public class BoardTest {
         Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
         Pieces.Piece[] rank1 = {_, _, _, _, Q, _, _, _};
         Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board(createBoardMemento(pieces), eventBus);
+        Board board = new Board(createBoardMemento(pieces), eventBus, movesRecord);
         board.pieceAt(D8).ifPresent(piece -> piece.moveTo(E7));
     }
 
@@ -183,7 +186,7 @@ public class BoardTest {
         Pieces.Piece[] rank2 = {_, _, _, N, _, _, _, _};
         Pieces.Piece[] rank1 = {_, _, _, K, _, _, _, _};
         Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board(createBoardMemento(pieces), eventBus);
+        Board board = new Board(createBoardMemento(pieces), eventBus, movesRecord);
         board.pieceAt(D2).ifPresent(piece -> piece.moveTo(E4));
     }
 
@@ -199,7 +202,7 @@ public class BoardTest {
         Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
         Pieces.Piece[] rank1 = {_, _, _, _, _, _, _, _};
         Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board(createBoardMemento(pieces), eventBus);
+        Board board = new Board(createBoardMemento(pieces), eventBus, movesRecord);
         board.pieceAt(B8).ifPresent(piece -> piece.moveTo(B7));
     }
 
@@ -215,7 +218,7 @@ public class BoardTest {
         Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
         Pieces.Piece[] rank1 = {_, _, _, _, Q, K, _, _};
         Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board(createBoardMemento(pieces), eventBus);
+        Board board = new Board(createBoardMemento(pieces), eventBus, movesRecord);
         board.pieceAt(D8).ifPresent(piece -> piece.moveTo(F6));
     }
 
@@ -230,7 +233,7 @@ public class BoardTest {
         Pieces.Piece[] rank2 = {P, P, P, P, P, P, P, P};
         Pieces.Piece[] rank1 = {R, N, B, Q, K, B, _, R};
         Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board(createBoardMemento(pieces), eventBus);
+        Board board = new Board(createBoardMemento(pieces), eventBus, movesRecord);
         assertFalse(board.pieceAt(D6).get().checkMate());
     }
 
@@ -245,7 +248,7 @@ public class BoardTest {
         Pieces.Piece[] rank2 = {P, P, P, P, _, P, P, P};
         Pieces.Piece[] rank1 = {R, N, B, _, K, B, N, R};
         Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board(createBoardMemento(pieces), eventBus);
+        Board board = new Board(createBoardMemento(pieces), eventBus, movesRecord);
         assertFalse(board.pieceAt(H5).get().checkMate());
     }
 
@@ -260,7 +263,7 @@ public class BoardTest {
         Pieces.Piece[] rank2 = {_, _, _, _, _, _, _, _};
         Pieces.Piece[] rank1 = {_, _, _, _, _, _, _, _};
         Pieces.Piece[][] pieces = {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
-        Board board = new Board(createBoardMemento(pieces), eventBus);
+        Board board = new Board(createBoardMemento(pieces), eventBus, movesRecord);
         assertFalse(board.pieceAt(B7).get().canMove());
         exception.expect(IllegalMove.class);
         exception.expectMessage("BLACK PAWN in b7 cannot move to b6 because " + KING_MUST_NOT_BE_IN_CHECK.toString());

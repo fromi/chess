@@ -10,31 +10,38 @@ import java.util.Map;
 import com.github.fromi.chess.Game;
 import com.github.fromi.chess.Player;
 import com.github.fromi.chess.material.Board;
+import com.github.fromi.chess.material.MovesRecord;
 import com.github.fromi.chess.material.Piece;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class GameMemento implements Game.Memento {
-    private final Board.Memento board;
+public class GameData implements Game.Data {
+    private final Board.Data board;
     private final Player.State whiteState;
     private final Player.State blackState;
 
-    public GameMemento(Board.Memento board) {
+    public GameData(Board.Data board) {
         this(board, WHITE);
     }
 
-    public GameMemento(Board.Memento board, Piece.Color activePlayer) {
+    public GameData(Board.Data board, Piece.Color activePlayer) {
         this.board = board;
         whiteState = activePlayer == WHITE ? PLAYING : WAITING;
         blackState = activePlayer == BLACK ? PLAYING : WAITING;
     }
 
     @Override
-    public Board.Memento getBoard() {
+    public Board.Data getBoard() {
         return board;
     }
 
     @Override
     public Map<Piece.Color, Player.State> getPlayersStates() {
         return ImmutableMap.of(WHITE, whiteState, BLACK, blackState);
+    }
+
+    @Override
+    public MovesRecord.Data getMovesRecord() {
+        return ImmutableList::of;
     }
 }

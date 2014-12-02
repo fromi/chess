@@ -30,7 +30,6 @@ public abstract class Piece {
             throw new IllegalMove(this, board, destination);
         }
         definitelyMoveTo(destination);
-        board.pieceAt(destination).ifPresent(piece -> board.eventBus.post(new PieceCaptured.Event(piece.color, piece.getType(), destination)));
     }
 
     public boolean canMove() {
@@ -74,8 +73,10 @@ public abstract class Piece {
 
     protected void definitelyMoveTo(Square destination) {
         Square origin = position;
+        Optional<Piece> optionalCapturedPiece = board.pieceAt(destination);
         doMoveTo(destination);
         board.eventBus.post(new PieceMove.Event(color, getType(), origin, destination));
+        optionalCapturedPiece.ifPresent(piece -> board.eventBus.post(new PieceCaptured.Event(piece.color, piece.getType(), destination)));
     }
 
     private void doMoveTo(Square destination) {
@@ -95,14 +96,14 @@ public abstract class Piece {
         Optional<Piece> targetPiece = board.pieceAt(destination);
         try {
             doMoveTo(destination);
-            return !kingIsCheck();
+            return kingIsSafe();
         } finally {
             revertMove(origin, destination, targetPiece);
         }
     }
 
-    protected boolean kingIsCheck() {
-        return board.pieces(color.opponent()).stream().anyMatch(Piece::check);
+    protected boolean kingIsSafe() {
+        return !board.pieces(color.opponent()).stream().anyMatch(Piece::check);
     }
 
     private boolean check() {
@@ -136,13 +137,17 @@ public abstract class Piece {
                         .anyMatch(piece -> piece.onEmptyBoardCouldMoveTo(square) && piece.pathEmptyTo(square)));
     }
 
+    protected boolean neverMoved() {
+        return !board.movesRecord.hasMoved(this);
+    }
+
     @Override
     public String toString() {
         return String.format("%s %s in %s", color, getType(), position);
     }
 
-    public Memento memento() {
-        return new Memento() {
+    public Data data() {
+        return new Data() {
             @Override
             public Square getPosition() {
                 return position;
@@ -158,10 +163,6 @@ public abstract class Piece {
                 return Piece.this.getType();
             }
         };
-    }
-
-    protected boolean hasNeverMoved() {
-        return true; // TODO moves record
     }
 
     public static enum Color {
@@ -223,7 +224,7 @@ public abstract class Piece {
         }
     }
 
-    public static interface Memento {
+    public static interface Data {
         Square getPosition();
 
         Color getColor();

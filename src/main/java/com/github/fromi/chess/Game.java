@@ -9,6 +9,7 @@ import static java.util.EnumSet.allOf;
 import java.util.Map;
 
 import com.github.fromi.chess.material.Board;
+import com.github.fromi.chess.material.MovesRecord;
 import com.github.fromi.chess.material.Piece;
 import com.google.common.eventbus.EventBus;
 
@@ -16,15 +17,18 @@ public class Game {
     private final EventBus eventBus = new EventBus();
     private final Map<Piece.Color, Player> players;
     private final Board board;
+    private final MovesRecord movesRecord;
 
     public Game() {
-        board = new Board(eventBus);
+        movesRecord = new MovesRecord(eventBus);
+        board = new Board(eventBus, movesRecord);
         players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, color == WHITE ? PLAYING : WAITING));
     }
 
-    public Game(Memento memento) {
-        board = new Board(memento.getBoard(), eventBus);
-        players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, memento.getPlayersStates().get(color)));
+    public Game(Data data) {
+        movesRecord = new MovesRecord(eventBus, data.getMovesRecord());
+        board = new Board(data.getBoard(), eventBus, movesRecord);
+        players = toMap(allOf(Piece.Color.class), color -> new Player(color, board, eventBus, data.getPlayersStates().get(color)));
     }
 
     public void register(Object listener) {
@@ -35,8 +39,9 @@ public class Game {
         return players.get(color);
     }
 
-    public static interface Memento {
-        Board.Memento getBoard();
+    public static interface Data {
+        Board.Data getBoard();
         Map<Piece.Color, Player.State> getPlayersStates();
+        MovesRecord.Data getMovesRecord();
     }
 }

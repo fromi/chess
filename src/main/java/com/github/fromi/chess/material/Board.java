@@ -30,16 +30,19 @@ public class Board {
     final ArrayTable<Integer, Character, Piece> table = ArrayTable.create(RANKS, FILES);
     final EventBus eventBus;
     final transient Map<Piece.Color, King> kings = new EnumMap<>(Piece.Color.class);
+    final transient MovesRecord movesRecord;
 
-    public Board(EventBus eventBus) {
+    public Board(EventBus eventBus, MovesRecord movesRecord) {
         this.eventBus = eventBus;
+        this.movesRecord = movesRecord;
         putPiecesAtInitialPosition(WHITE);
         putPiecesAtInitialPosition(BLACK);
     }
 
-    public Board(Memento memento, EventBus eventBus) {
+    public Board(Data data, EventBus eventBus, MovesRecord movesRecord) {
         this.eventBus = eventBus;
-        memento.getPieces().forEachRemaining(this::createPieceOnBoardFrom);
+        this.movesRecord = movesRecord;
+        data.getPieces().forEachRemaining(this::createPieceOnBoardFrom);
     }
 
     private void putPiecesAtInitialPosition(Piece.Color color) {
@@ -57,11 +60,11 @@ public class Board {
         kings.put(color, king);
     }
 
-    private void createPieceOnBoardFrom(Piece.Memento pieceMemento) {
-        Piece piece = pieceMemento.getType().createPiece(pieceMemento.getColor(), this, pieceMemento.getPosition());
-        table.put(pieceMemento.getPosition().getRank(), pieceMemento.getPosition().getFile(), piece);
+    private void createPieceOnBoardFrom(Piece.Data pieceData) {
+        Piece piece = pieceData.getType().createPiece(pieceData.getColor(), this, pieceData.getPosition());
+        table.put(pieceData.getPosition().getRank(), pieceData.getPosition().getFile(), piece);
         if (piece instanceof King) {
-            kings.put(pieceMemento.getColor(), (King) piece);
+            kings.put(pieceData.getColor(), (King) piece);
         }
     }
 
@@ -79,12 +82,12 @@ public class Board {
                 .filter(Pawn::canBePromoted).findFirst().get().promoteTo(type);
     }
 
-    public Memento memento() {
-        return () -> table.cellSet().stream().filter(cell -> cell.getValue() != null).map(cell -> cell.getValue().memento()).iterator();
+    public Data data() {
+        return () -> table.cellSet().stream().filter(cell -> cell.getValue() != null).map(cell -> cell.getValue().data()).iterator();
     }
 
-    public static interface Memento {
-        Iterator<Piece.Memento> getPieces();
+    public static interface Data {
+        Iterator<Piece.Data> getPieces();
     }
 
     private class PieceSet extends AbstractSet<Piece> {
